@@ -24,10 +24,16 @@ import OnboardingKitDetails from './pages/OnboardingKits/OnboardingKitDetails';
 import SpendOverview from './pages/Spend/SpendOverview';
 import ComplianceOverview from './pages/Compliance/ComplianceOverview';
 import FinancialDashboard from './pages/Finance/FinancialDashboard';
+import BudgetTracking from './pages/Finance/BudgetTracking';
+import VendorList from './pages/Vendors/VendorList';
+import VendorDetails from './pages/Vendors/VendorDetails';
+import ContractList from './pages/Contracts/ContractList';
+import ContractDetails from './pages/Contracts/ContractDetails';
 import Reports from './pages/Reports/Reports';
 import CustomReportBuilder from './pages/Reports/CustomReportBuilder';
 import Settings from './pages/Settings/Settings';
 import LoadingSpinner from './components/Common/LoadingSpinner';
+import ErrorBoundary from './components/Common/ErrorBoundary';
 
 // Protected Route wrapper
 const ProtectedRoute = ({ children, requiredRole }) => {
@@ -72,7 +78,8 @@ const PublicRoute = ({ children }) => {
 
 function App() {
   return (
-    <Routes>
+    <ErrorBoundary>
+      <Routes>
       {/* Public Routes */}
       <Route
         path="/login"
@@ -258,6 +265,82 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="finance/budget"
+          element={
+            <ProtectedRoute requiredRole={['admin', 'manager']}>
+              <BudgetTracking />
+            </ProtectedRoute>
+          }
+        />
+        
+        {/* Vendors */}
+        <Route
+          path="vendors"
+          element={
+            <ProtectedRoute requiredRole={['admin', 'manager']}>
+              <VendorList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="vendors/new"
+          element={
+            <ProtectedRoute requiredRole={['admin', 'manager']}>
+              <VendorDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="vendors/:id"
+          element={
+            <ProtectedRoute requiredRole={['admin', 'manager']}>
+              <VendorDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="vendors/:id/edit"
+          element={
+            <ProtectedRoute requiredRole={['admin', 'manager']}>
+              <VendorDetails />
+            </ProtectedRoute>
+          }
+        />
+        
+        {/* Contracts */}
+        <Route
+          path="contracts"
+          element={
+            <ProtectedRoute requiredRole={['admin', 'manager']}>
+              <ContractList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="contracts/new"
+          element={
+            <ProtectedRoute requiredRole={['admin', 'manager']}>
+              <ContractDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="contracts/:id"
+          element={
+            <ProtectedRoute requiredRole={['admin', 'manager']}>
+              <ContractDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="contracts/:id/edit"
+          element={
+            <ProtectedRoute requiredRole={['admin', 'manager']}>
+              <ContractDetails />
+            </ProtectedRoute>
+          }
+        />
         
         {/* Compliance & Risk */}
         <Route
@@ -300,9 +383,9 @@ function App() {
 
       {/* 404 */}
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      </Routes>
+    </ErrorBoundary>
   );
 }
 
 export default App;
-

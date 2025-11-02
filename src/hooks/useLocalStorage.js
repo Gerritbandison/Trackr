@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 
 /**
- * Custom hook for localStorage with state sync
- * @param {string} key - The localStorage key
+ * Custom hook for managing localStorage with automatic sync
+ * @param {string} key - localStorage key
  * @param {any} initialValue - Initial value if key doesn't exist
- * @returns {[any, function]} - [value, setValue] tuple
+ * @returns {[any, function]} - [value, setValue]
  */
 export const useLocalStorage = (key, initialValue) => {
   // State to store our value
@@ -13,7 +13,7 @@ export const useLocalStorage = (key, initialValue) => {
       const item = window.localStorage.getItem(key);
       return item ? JSON.parse(item) : initialValue;
     } catch (error) {
-      console.error(`Error loading ${key} from localStorage:`, error);
+      console.error(`Error reading localStorage key "${key}":`, error);
       return initialValue;
     }
   });
@@ -22,12 +22,12 @@ export const useLocalStorage = (key, initialValue) => {
   // persists the new value to localStorage.
   const setValue = (value) => {
     try {
-      // Allow value to be a function so we have same API as useState
+      // Allow value to be a function so we have the same API as useState
       const valueToStore = value instanceof Function ? value(storedValue) : value;
       setStoredValue(valueToStore);
       window.localStorage.setItem(key, JSON.stringify(valueToStore));
     } catch (error) {
-      console.error(`Error saving ${key} to localStorage:`, error);
+      console.error(`Error setting localStorage key "${key}":`, error);
     }
   };
 
@@ -35,4 +35,3 @@ export const useLocalStorage = (key, initialValue) => {
 };
 
 export default useLocalStorage;
-

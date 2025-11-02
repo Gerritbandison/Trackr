@@ -11,6 +11,7 @@ import {
   FiTrendingDown,
   FiDollarSign,
   FiShield,
+  FiActivity,
 } from 'react-icons/fi';
 import { assetsAPI, usersAPI, licensesAPI, assetGroupsAPI } from '../../config/api';
 import StatCard from '../../components/Common/StatCard';
@@ -139,47 +140,8 @@ const Dashboard = () => {
       value: item.totalValue || 0,
     })) || [];
 
-  // Filter assets based on selected device type
-  const filteredAssets = selectedDeviceType === 'all' 
-    ? allAssetsData || []
-    : (allAssetsData || []).filter(
-        asset => asset.category?.toLowerCase() === selectedDeviceType
-      );
-
-  // Calculate device-specific stats
-  const deviceSpecificStats = {
-    total: filteredAssets.length,
-    available: filteredAssets.filter(a => a.status?.toLowerCase() === 'available').length,
-    assigned: filteredAssets.filter(a => a.status?.toLowerCase() === 'assigned').length,
-    inRepair: filteredAssets.filter(a => a.status?.toLowerCase() === 'maintenance' || a.status?.toLowerCase() === 'repair').length,
-    expiringWarranties: filteredAssets.filter(asset => {
-      if (!asset.warrantyExpiry) return false;
-      const daysUntilExpiry = Math.ceil(
-        (new Date(asset.warrantyExpiry) - new Date()) / (1000 * 60 * 60 * 24)
-      );
-      return daysUntilExpiry > 0 && daysUntilExpiry <= 14;
-    }).length,
-    totalValue: filteredAssets.reduce((sum, asset) => sum + (asset.purchasePrice || 0), 0),
-  };
-
-  // Get device type label
-  const getDeviceTypeLabel = () => {
-    const deviceTypes = {
-      all: 'All Assets',
-      laptop: 'Laptops',
-      desktop: 'Desktops',
-      monitor: 'Monitors',
-      phone: 'Phones',
-      tablet: 'Tablets',
-      dock: 'Docks',
-      server: 'Servers',
-      printer: 'Printers',
-    };
-    return deviceTypes[selectedDeviceType] || 'Assets';
-  };
-
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       {/* Alert Modal */}
       <AlertModal
         isOpen={showAlertModal}
@@ -191,25 +153,29 @@ const Dashboard = () => {
       {totalCriticalAlerts > 0 && (
         <div 
           onClick={() => setShowAlertModal(true)}
-          className="card bg-gradient-to-r from-red-50 to-orange-50 border-l-4 border-red-500 cursor-pointer hover:shadow-lg transition-all"
+          className="relative overflow-hidden bg-gradient-to-r from-red-50 via-red-50 to-red-50 rounded-3xl border-2 border-red-200 cursor-pointer hover:shadow-xl transition-all hover:-translate-y-0.5"
         >
-          <div className="card-body">
+          <div className="absolute inset-0 bg-gradient-to-r from-red-600/5 to-transparent"></div>
+          <div className="relative p-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-red-100 rounded-lg">
-                  <FiAlertCircle className="text-red-600" size={24} />
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-600 to-red-500 flex items-center justify-center shadow-lg">
+                    <FiAlertCircle className="text-white" size={28} strokeWidth={2.5} />
+                  </div>
+                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full border-2 border-white animate-ping"></div>
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-red-900">
+                  <h3 className="text-xl font-bold text-red-900">
                     {totalCriticalAlerts} Action Item{totalCriticalAlerts !== 1 ? 's' : ''} Requiring Attention
                   </h3>
-                  <p className="text-sm text-red-700 mt-1">
-                    Click to view expiring licenses, warranties, and stock alerts
+                  <p className="text-sm text-red-700 mt-1 font-medium">
+                    Click to view details and take action
                   </p>
                 </div>
               </div>
-              <button className="btn btn-sm bg-red-600 text-white hover:bg-red-700">
-                View Alerts
+              <button className="btn bg-red-600 hover:bg-red-700 text-white shadow-lg hover:shadow-xl transition-all">
+                View All Alerts
               </button>
             </div>
           </div>
@@ -217,25 +183,25 @@ const Dashboard = () => {
       )}
 
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-4xl font-bold text-secondary-900 tracking-tight">Dashboard</h1>
-          <p className="text-secondary-600 mt-2 text-lg">
-            Comprehensive overview of your IT assets and licenses
+          <p className="text-secondary-600 mt-2">
+            Welcome back! Here's your IT overview
           </p>
         </div>
-        <div className="hidden lg:flex items-center gap-6">
-          <Link to="/licenses/optimization" className="flex items-center gap-2 text-sm text-green-600 hover:text-green-700 font-medium">
-            <FiTrendingUp size={16} />
-            License Optimization
+        <div className="flex items-center gap-3 flex-wrap">
+          <Link to="/licenses/optimization" className="btn btn-outline flex items-center gap-2 btn-sm">
+            <FiTrendingUp size={18} />
+            <span className="hidden sm:inline">Optimization</span>
           </Link>
-          <Link to="/spend" className="flex items-center gap-2 text-sm text-primary-600 hover:text-primary-700 font-medium">
-            <FiDollarSign size={16} />
-            Spend Analytics
+          <Link to="/spend" className="btn btn-outline flex items-center gap-2 btn-sm">
+            <FiDollarSign size={18} />
+            <span className="hidden sm:inline">Spend</span>
           </Link>
-          <Link to="/compliance" className="flex items-center gap-2 text-sm text-purple-600 hover:text-purple-700 font-medium">
-            <FiShield size={16} />
-            Compliance Status
+          <Link to="/compliance" className="btn btn-outline flex items-center gap-2 btn-sm">
+            <FiShield size={18} />
+            <span className="hidden sm:inline">Compliance</span>
           </Link>
         </div>
       </div>
@@ -287,7 +253,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Quick Actions & Alerts Row */}
+      {/* Quick Actions & Alerts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <QuickActions />
@@ -297,366 +263,223 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div>
-          <RecentActivity />
-        </div>
-        <div className="card">
-          <div className="card-header bg-gradient-to-r from-green-50 to-transparent">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-                <FiTrendingUp className="text-green-600" size={20} />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-secondary-900">System Health</h3>
-                <p className="text-sm text-secondary-600">Overall status</p>
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column - Charts */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Asset Status Chart */}
+          <div className="card">
+            <div className="card-header">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900">Asset Status</h3>
+                  <p className="text-sm text-slate-600 mt-1">Current distribution</p>
+                </div>
+                <Link to="/assets" className="text-sm font-semibold text-primary-600 hover:text-primary-700">
+                  View All →
+                </Link>
               </div>
             </div>
+            <div className="card-body">
+              {assetStatusData.length > 0 ? (
+                <>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <PieChart>
+                      <Pie
+                        data={assetStatusData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent, value }) =>
+                          percent > 0.05 ? `${name}: ${value}` : ''
+                        }
+                        outerRadius={85}
+                        innerRadius={45}
+                        fill="#8884d8"
+                        dataKey="value"
+                        animationBegin={400}
+                        animationDuration={800}
+                        paddingAngle={3}
+                      >
+                        {assetStatusData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'white', 
+                          border: '2px solid #e5e7eb',
+                          borderRadius: '12px',
+                          boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                        }}
+                        formatter={(value) => [`${value} assets`, 'Count']}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-slate-100">
+                    {assetStatusData.map((entry, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full flex-shrink-0" 
+                          style={{ backgroundColor: entry.color }}
+                        />
+                        <span className="text-sm text-slate-700 font-medium">
+                          <span className="font-bold text-slate-900">{entry.value}</span> {entry.name}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-12 text-slate-500">
+                  <FiPackage className="mx-auto mb-3 opacity-30" size={56} />
+                  <p className="font-medium">No asset data available</p>
+                </div>
+              )}
+            </div>
           </div>
-          <div className="card-body">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                <span className="text-sm font-medium text-green-700">Systems Operational</span>
-                <Badge variant="success" text="100%" />
+
+          {/* Asset Availability Chart */}
+          <div className="card">
+            <div className="card-header">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900">Availability by Device Type</h3>
+                  <p className="text-sm text-slate-600 mt-1">Monitor asset availability</p>
+                </div>
+                <Link to="/assets" className="text-sm font-semibold text-primary-600 hover:text-primary-700">
+                  Manage →
+                </Link>
               </div>
-              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                <span className="text-sm font-medium text-blue-700">Data Sync Status</span>
-                <Badge variant="info" text="Online" />
+            </div>
+            <div className="card-body">
+              <AvailabilityChart 
+                assets={allAssetsData || []} 
+                onDeviceTypeChange={setSelectedDeviceType}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column - Stats & Activity */}
+        <div className="space-y-6">
+          {/* Recent Activity */}
+          <div className="card">
+            <div className="card-header">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center">
+                    <FiActivity className="text-white" size={20} strokeWidth={2.5} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900">Recent Activity</h3>
+                    <p className="text-xs text-slate-600">Latest updates</p>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                <span className="text-sm font-medium text-purple-700">License Compliance</span>
-                <Badge variant="success" text="Compliant" />
+            </div>
+            <div className="card-body p-0">
+              <ActivityFeed limit={6} />
+            </div>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="card">
+            <div className="card-header">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold text-slate-900">Quick Stats</h3>
+                <Badge variant="success" text="All Systems Operational" />
+              </div>
+            </div>
+            <div className="card-body space-y-3">
+              <div className="flex items-center justify-between p-3 bg-gradient-to-r from-success-50 to-emerald-50 rounded-xl border border-success-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-success-500 animate-pulse"></div>
+                  <span className="text-sm font-semibold text-success-900">System Status</span>
+                </div>
+                <span className="text-sm font-bold text-success-700">Online</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                  <span className="text-sm font-semibold text-blue-900">Data Sync</span>
+                </div>
+                <span className="text-sm font-bold text-blue-700">Current</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl border border-purple-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                  <span className="text-sm font-semibold text-purple-900">Compliance</span>
+                </div>
+                <span className="text-sm font-bold text-purple-700">100%</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Asset Availability by Device Type */}
-      <div className="card animate-scale-in">
+      {/* Asset Categories Bar Chart */}
+      <div className="card">
         <div className="card-header">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-xl font-semibold text-secondary-900">Asset Availability by Device Type</h3>
-              <p className="text-sm text-secondary-600 mt-1">
-                Monitor available assets across different device categories
+              <h3 className="text-xl font-bold text-slate-900">Assets by Category</h3>
+              <p className="text-sm text-slate-600 mt-1">
+                {assetCategoryData.reduce((sum, item) => sum + item.count, 0)} total items
               </p>
             </div>
-            <Link to="/assets" className="text-sm font-medium text-primary-600 hover:text-primary-700">
-              Manage Assets →
-            </Link>
           </div>
         </div>
         <div className="card-body">
-          <AvailabilityChart 
-            assets={allAssetsData || []} 
-            onDeviceTypeChange={setSelectedDeviceType}
-          />
-        </div>
-      </div>
-
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Asset Status Distribution */}
-        <div className="card animate-scale-in">
-          <div className="card-header">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-semibold text-secondary-900">Asset Status Distribution</h3>
-              <span className="text-sm text-secondary-500 font-medium">Total: {assetStats?.totalAssets || 0}</span>
+          {assetCategoryData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={assetCategoryData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                <XAxis 
+                  dataKey="name" 
+                  tick={{ fill: '#6b7280', fontSize: 12 }} 
+                  tickLine={false}
+                  axisLine={{ stroke: '#e5e7eb' }}
+                />
+                <YAxis 
+                  tick={{ fill: '#6b7280', fontSize: 12 }} 
+                  tickLine={false}
+                  axisLine={{ stroke: '#e5e7eb' }}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'white', 
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '12px',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                  }}
+                  formatter={(value, name) => {
+                    if (name === 'count') return [value, 'Quantity'];
+                    return [value, name];
+                  }}
+                  labelFormatter={(label) => `Category: ${label}`}
+                />
+                <Bar 
+                  dataKey="count" 
+                  fill="url(#colorGradient)" 
+                  radius={[8, 8, 0, 0]}
+                  animationBegin={600}
+                  animationDuration={800}
+                />
+                <defs>
+                  <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#0284c7" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="#06b6d4" stopOpacity={0.8}/>
+                  </linearGradient>
+                </defs>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="text-center py-12 text-slate-500">
+              <FiPackage className="mx-auto mb-3 opacity-30" size={56} />
+              <p className="font-medium">No category data available</p>
             </div>
-          </div>
-          <div className="card-body">
-            {assetStatusData.length > 0 ? (
-              <>
-                <ResponsiveContainer width="100%" height={280}>
-                  <PieChart>
-                    <Pie
-                      data={assetStatusData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent, value }) =>
-                        percent > 0.05 ? `${name}: ${value}` : ''
-                      }
-                      outerRadius={95}
-                      innerRadius={50}
-                      fill="#8884d8"
-                      dataKey="value"
-                      animationBegin={400}
-                      animationDuration={800}
-                      paddingAngle={2}
-                    >
-                      {assetStatusData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'white', 
-                        border: 'none',
-                        borderRadius: '12px',
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-                        padding: '12px'
-                      }}
-                      formatter={(value) => [`${value} assets`, 'Count']}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-                {/* Legend */}
-                <div className="grid grid-cols-2 gap-3 mt-4">
-                  {assetStatusData.map((entry, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <div 
-                        className="w-3 h-3 rounded-full flex-shrink-0" 
-                        style={{ backgroundColor: entry.color }}
-                      />
-                      <span className="text-sm text-gray-700">
-                        <span className="font-semibold">{entry.value}</span> {entry.name}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <div className="text-center py-12 text-gray-500">
-                <FiPackage className="mx-auto mb-2" size={48} opacity={0.3} />
-                <p>No asset data available</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Assets by Category */}
-        <div className="card animate-scale-in" style={{ animationDelay: '100ms' }}>
-          <div className="card-header">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-semibold text-secondary-900">Assets by Category</h3>
-              <span className="text-sm text-secondary-500 font-medium">
-                {assetCategoryData.reduce((sum, item) => sum + item.count, 0)} items
-              </span>
-            </div>
-          </div>
-          <div className="card-body">
-            {assetCategoryData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={320}>
-                <BarChart data={assetCategoryData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                  <XAxis 
-                    dataKey="name" 
-                    tick={{ fill: '#6b7280', fontSize: 12 }} 
-                    tickLine={false}
-                    axisLine={{ stroke: '#e5e7eb' }}
-                  />
-                  <YAxis 
-                    tick={{ fill: '#6b7280', fontSize: 12 }} 
-                    tickLine={false}
-                    axisLine={{ stroke: '#e5e7eb' }}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'white', 
-                      border: 'none',
-                      borderRadius: '12px',
-                      boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-                      padding: '12px'
-                    }}
-                    formatter={(value, name) => {
-                      if (name === 'count') return [value, 'Quantity'];
-                      return [value, name];
-                    }}
-                    labelFormatter={(label) => `Category: ${label}`}
-                  />
-                  <Bar 
-                    dataKey="count" 
-                    fill="url(#colorGradient)" 
-                    radius={[8, 8, 0, 0]}
-                    animationBegin={600}
-                    animationDuration={800}
-                  />
-                  <defs>
-                    <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#6366f1" stopOpacity={1}/>
-                      <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.8}/>
-                    </linearGradient>
-                  </defs>
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="text-center py-12 text-gray-500">
-                <FiPackage className="mx-auto mb-2" size={48} opacity={0.3} />
-                <p>No category data available</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Stats Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Asset Stats */}
-        <div className="card animate-scale-in" style={{ animationDelay: '200ms' }}>
-          <div className="card-header">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-semibold text-secondary-900">
-                  {getDeviceTypeLabel()} Overview
-                </h3>
-                {selectedDeviceType !== 'all' && (
-                  <p className="text-xs text-secondary-500 mt-1">
-                    Filtered by selected device type
-                  </p>
-                )}
-              </div>
-              <Link to="/assets" className="text-sm font-medium text-primary-600 hover:text-primary-700">
-                View All →
-              </Link>
-            </div>
-          </div>
-          <div className="card-body space-y-1">
-            <div className="flex justify-between items-center py-3.5 border-b border-gray-50 hover:bg-gray-50/50 transition-colors rounded px-3 -mx-3">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                <span className="text-secondary-700 font-medium">
-                  Available {selectedDeviceType !== 'all' ? getDeviceTypeLabel() : 'Assets'}
-                </span>
-              </div>
-              <span className="font-bold text-emerald-600 text-lg">
-                {deviceSpecificStats.available}
-              </span>
-            </div>
-            <div className="flex justify-between items-center py-3.5 border-b border-gray-50 hover:bg-gray-50/50 transition-colors rounded px-3 -mx-3">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                <span className="text-secondary-700 font-medium">
-                  Assigned {selectedDeviceType !== 'all' ? getDeviceTypeLabel() : 'Assets'}
-                </span>
-              </div>
-              <span className="font-bold text-blue-600 text-lg">
-                {deviceSpecificStats.assigned}
-              </span>
-            </div>
-            <div className="flex justify-between items-center py-3.5 border-b border-gray-50 hover:bg-gray-50/50 transition-colors rounded px-3 -mx-3">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-amber-500"></div>
-                <span className="text-secondary-700 font-medium">In Repair</span>
-              </div>
-              <span className="font-bold text-amber-600 text-lg">
-                {deviceSpecificStats.inRepair}
-              </span>
-            </div>
-            <div className="flex justify-between items-center py-3.5 border-b border-gray-50 hover:bg-gray-50/50 transition-colors rounded px-3 -mx-3">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                <span className="text-secondary-700 font-medium">Expiring Warranties</span>
-              </div>
-              <span className="font-bold text-red-600 text-lg">
-                {deviceSpecificStats.expiringWarranties}
-              </span>
-            </div>
-            <div className="flex justify-between items-center py-3.5 pt-4 px-3 -mx-3">
-              <span className="text-secondary-700 font-semibold">Total Value</span>
-              <span className="font-bold text-secondary-900 text-xl">
-                ${deviceSpecificStats.totalValue.toLocaleString()}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* License Stats */}
-        <div className="card animate-scale-in" style={{ animationDelay: '300ms' }}>
-          <div className="card-header">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-semibold text-secondary-900">License Overview</h3>
-              <Link to="/licenses" className="text-sm font-medium text-primary-600 hover:text-primary-700">
-                View All →
-              </Link>
-            </div>
-          </div>
-          <div className="card-body space-y-1">
-            <div className="flex justify-between items-center py-3.5 border-b border-gray-50 hover:bg-gray-50/50 transition-colors rounded px-3 -mx-3">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                <span className="text-secondary-700 font-medium">Active Licenses</span>
-              </div>
-              <span className="font-bold text-emerald-600 text-lg">
-                {licenseStats?.activeLicenses || 0}
-              </span>
-            </div>
-            <div className="flex justify-between items-center py-3.5 border-b border-gray-50 hover:bg-gray-50/50 transition-colors rounded px-3 -mx-3">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                <span className="text-secondary-700 font-medium">Total Seats</span>
-              </div>
-              <span className="font-bold text-blue-600 text-lg">
-                {licenseStats?.totalSeats || 0}
-              </span>
-            </div>
-            <div className="flex justify-between items-center py-3.5 border-b border-gray-50 hover:bg-gray-50/50 transition-colors rounded px-3 -mx-3">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-primary-500"></div>
-                <span className="text-secondary-700 font-medium">Used Seats</span>
-              </div>
-              <span className="font-bold text-primary-600 text-lg">
-                {licenseStats?.usedSeats || 0}
-              </span>
-            </div>
-            <div className="flex justify-between items-center py-3.5 border-b border-gray-50 hover:bg-gray-50/50 transition-colors rounded px-3 -mx-3">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                <span className="text-secondary-700 font-medium">Expiring Soon</span>
-              </div>
-              <span className="font-bold text-red-600 text-lg">
-                {licenseStats?.expiringLicenses || 0}
-              </span>
-            </div>
-            <div className="flex justify-between items-center py-3.5 pt-4 px-3 -mx-3">
-              <span className="text-secondary-700 font-semibold">Annual Cost</span>
-              <span className="font-bold text-secondary-900 text-xl">
-                ${(licenseStats?.totalAnnualCost || 0).toLocaleString()}
-              </span>
-            </div>
-            
-            {/* Optimization CTA */}
-            {licenseStats?.utilization < 80 && (
-              <Link 
-                to="/licenses/optimization"
-                className="block mt-4 -mx-6 -mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-t border-green-200 hover:from-green-100 hover:to-emerald-100 transition-colors group"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <FiTrendingDown className="text-green-600 group-hover:scale-110 transition-transform" size={20} />
-                    <div>
-                      <p className="text-sm font-semibold text-green-900">
-                        Optimization Available
-                      </p>
-                      <p className="text-xs text-green-700">
-                        {licenseStats?.utilization || 0}% utilization - potential savings
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-sm font-medium text-green-700 group-hover:text-green-800">
-                    View →
-                  </span>
-                </div>
-              </Link>
-            )}
-          </div>
-        </div>
-
-        {/* Recent Activity Feed */}
-        <div className="card">
-          <div className="card-header">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-semibold text-secondary-900">Recent Activity</h3>
-              <Link to="/compliance" className="text-sm font-medium text-primary-600 hover:text-primary-700">
-                View All →
-              </Link>
-            </div>
-          </div>
-          <div className="card-body">
-            <ActivityFeed limit={8} />
-          </div>
+          )}
         </div>
       </div>
     </div>

@@ -4,12 +4,12 @@ import {
   FiPackage,
   FiUsers,
   FiKey,
-  FiQrCode,
   FiDownload,
   FiPrinter,
   FiFileText,
   FiBell,
   FiRefreshCw,
+  FiGrid,
 } from 'react-icons/fi';
 
 const QuickActions = () => {
@@ -36,7 +36,7 @@ const QuickActions = () => {
       description: 'Add software license',
     },
     {
-      icon: FiQrCode,
+      icon: FiGrid,
       label: 'Generate QR',
       color: 'from-orange-500 to-orange-600',
       href: '/assets/qr-generator',
@@ -60,41 +60,58 @@ const QuickActions = () => {
   ];
 
   return (
-    <div className="card">
-      <div className="card-header bg-gradient-to-r from-accent-50 to-transparent">
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-lg bg-accent-100 flex items-center justify-center">
-            <FiRefreshCw className="text-accent-600" size={20} />
+    <div className="relative overflow-hidden bg-gradient-to-br from-white via-slate-50/30 to-white rounded-3xl border-2 border-slate-200 shadow-lg hover:shadow-xl transition-all duration-300">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-primary-50 via-cyan-50/30 to-transparent px-6 py-5 border-b-2 border-slate-200">
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-600 to-primary-500 flex items-center justify-center shadow-lg">
+              <FiRefreshCw className="text-white" size={22} strokeWidth={2.5} />
+            </div>
+            <div className="absolute -top-1 -right-1 w-4 h-4 bg-accent-500 rounded-full border-2 border-white animate-pulse"></div>
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-secondary-900">Quick Actions</h3>
-            <p className="text-sm text-secondary-600">Frequently used operations</p>
+            <h3 className="text-xl font-bold text-slate-900">Quick Actions</h3>
+            <p className="text-sm text-slate-600 font-medium">Frequently used operations</p>
           </div>
         </div>
       </div>
-      <div className="card-body">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+
+      {/* Actions Grid */}
+      <div className="p-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {actions.map((action, index) => (
             <Link
               key={index}
               to={action.href}
-              className="group relative p-4 rounded-xl border-2 border-gray-200 hover:border-accent-300 bg-white hover:bg-gradient-to-br hover:from-accent-50 hover:to-transparent transition-all duration-200 hover:shadow-md"
+              className="group relative overflow-hidden bg-gradient-to-br from-white to-slate-50/30 p-5 rounded-2xl border-2 border-slate-200 hover:border-primary-300 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
             >
-              <div className="flex flex-col items-center text-center gap-2">
-                <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${action.color} flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-200`}>
-                  <action.icon className="text-white" size={20} />
+              {/* Background gradient on hover */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${action.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
+              
+              {/* Decorative dot */}
+              <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-slate-300 group-hover:bg-primary-500 transition-colors"></div>
+              
+              {action.badge && (
+                <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-gradient-to-br from-red-500 to-red-600 text-white text-xs flex items-center justify-center font-bold shadow-lg z-10 animate-pulse">
+                  {action.badge}
+                </span>
+              )}
+
+              <div className="relative flex flex-col items-center text-center gap-3">
+                {/* Icon */}
+                <div className={`relative w-16 h-16 rounded-2xl bg-gradient-to-br ${action.color} flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-300`}>
+                  <action.icon className="text-white" size={24} strokeWidth={2.5} />
+                  <div className="absolute inset-0 rounded-2xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 </div>
-                <div>
-                  <p className="font-semibold text-sm text-gray-900 group-hover:text-accent-700 transition-colors">
+
+                {/* Label and Description */}
+                <div className="flex flex-col gap-1">
+                  <p className="font-bold text-sm text-slate-900 group-hover:text-primary-700 transition-colors">
                     {action.label}
                   </p>
-                  <p className="text-xs text-gray-500 mt-0.5">{action.description}</p>
+                  <p className="text-xs text-slate-600 font-medium">{action.description}</p>
                 </div>
-                {action.badge && (
-                  <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">
-                    {action.badge}
-                  </span>
-                )}
               </div>
             </Link>
           ))}

@@ -58,7 +58,18 @@ const SpendOverview = () => {
     { id: 6, date: '2024-01-03', description: 'iPhone 15 Pro x8', amount: 9600, department: 'Sales', type: 'hardware' },
   ];
 
-  const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6'];
+  // Premium gradient colors for charts
+  const COLORS = ['#0284c7', '#06b6d4', '#0ea5e9', '#06b6d4', '#0284c7', '#0369a1']; // Cyan spectrum
+  const CHART_COLORS = {
+    primary: '#0284c7',
+    secondary: '#06b6d4',
+    success: '#10b981',
+    warning: '#f59e0b',
+    danger: '#ef4444',
+    accent: '#ec4899',
+    gradient1: 'url(#primaryGradient)',
+    gradient2: 'url(#secondaryGradient)',
+  };
 
   // Calculate cost drivers
   const departmentSpend = spendData?.assets?.byDepartment || [];

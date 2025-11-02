@@ -1,0 +1,195 @@
+/* Mobile Responsiveness Improvements */
+
+/* Tablet adjustments */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 240px;
+  }
+  
+  .main-content {
+    margin-left: 240px;
+  }
+  
+  .grid-responsive {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  /* Sidebar becomes drawer */
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+  
+  .main-content {
+    margin-left: 0;
+  }
+  
+  /* Stack form columns */
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  /* Adjust card layouts */
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  /* Touch-friendly buttons */
+  .btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Adjust table display */
+  .table-responsive {
+    overflow-x: auto;
+  }
+  
+  /* Hide less important columns on mobile */
+  .table-mobile-hidden {
+    display: none;
+  }
+  
+  /* Stack stat cards */
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  /* Full-width dropdowns */
+  .dropdown {
+    width: 100%;
+  }
+  
+  /* Adjust search bar */
+  .search-bar {
+    width: 100%;
+  }
+  
+  /* Mobile-friendly modals */
+  .modal-content {
+    width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  /* Adjust font sizes */
+  h1 {
+    font-size: 2rem;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+  }
+  
+  h3 {
+    font-size: 1.25rem;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  /* Further reduce padding */
+  .container {
+    padding: 0.5rem;
+  }
+  
+  /* Single column layouts */
+  .grid-responsive {
+    grid-template-columns: 1fr;
+  }
+  
+  /* Compact form fields */
+  .form-field {
+    margin-bottom: 0.75rem;
+  }
+  
+  /* Adjust button sizes */
+  .btn {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+  }
+  
+  /* Smaller icons */
+  .icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  /* Larger touch targets */
+  .touch-target {
+    min-height: 48px;
+    min-width: 48px;
+  }
+  
+  /* Remove hover effects */
+  .hover-effect:hover {
+    opacity: 1;
+  }
+  
+  /* Better tap feedback */
+  .btn:active {
+    transform: scale(0.95);
+  }
+}
+
+/* Landscape mobile optimizations */
+@media (max-width: 768px) and (orientation: landscape) {
+  .modal-content {
+    max-height: 85vh;
+  }
+  
+  .header {
+    height: auto;
+    padding: 0.5rem;
+  }
+}
+
+/* Print styles */
+@media print {
+  .sidebar,
+  .header,
+  .btn,
+  .no-print {
+    display: none !important;
+  }
+  
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+  }
+  
+  .card {
+    break-inside: avoid;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .card {
+    border: 2px solid;
+  }
+  
+  .btn {
+    border: 2px solid;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { 
   FiArrowLeft, FiMail, FiPhone, FiMapPin, FiMonitor, FiPackage,
   FiHardDrive, FiKey, FiRefreshCw, FiCheck, FiClock, FiAlertCircle,
@@ -16,6 +16,7 @@ import { format } from 'date-fns';
 const UserDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState('overview');
   const [expandedSections, setExpandedSections] = useState({
     workstationSpecs: false,
@@ -40,17 +41,19 @@ const UserDetails = () => {
     }
   };
 
-  // Fetch user data
+  // Fetch user data - skip if creating new user
+  const isNewUser = location.pathname === '/users/new';
   const { data: userData, isLoading: loadingUser } = useQuery({
     queryKey: ['user', id],
     queryFn: () => usersAPI.getById(id).then((res) => res.data.data),
+    enabled: !!id && !isNewUser,
   });
 
   // Fetch synced devices for this user
   const { data: syncedDevicesData } = useQuery({
     queryKey: ['user-synced-devices', id],
     queryFn: () => integrationsAPI.getSyncedDevices({ userId: id }).then(res => res.data.data),
-    enabled: !!id,
+    enabled: !!id && !isNewUser,
   });
 
   // Fetch Microsoft licenses for this user
@@ -71,7 +74,55 @@ const UserDetails = () => {
     enabled: !!id && !!userData,
   });
 
-  if (loadingUser) return <LoadingSpinner />;
+  if (loadingUser && !isNewUser) return <LoadingSpinner />;
+
+  // Handle new user creation
+  if (isNewUser) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => navigate('/users')} 
+            className="btn btn-outline"
+          >
+            <FiArrowLeft />
+          </button>
+          <div>
+            <h1 className="text-4xl font-bold text-secondary-900 tracking-tight">Create New User</h1>
+            <p className="text-secondary-600 text-lg mt-1">Add a new user to the system</p>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-body">
+            <p className="text-center text-secondary-600 py-8">
+              User creation form will be displayed here
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle case where user doesn't exist
+  if (!userData) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => navigate('/users')} 
+            className="btn btn-outline"
+          >
+            <FiArrowLeft />
+          </button>
+          <div>
+            <h1 className="text-4xl font-bold text-secondary-900 tracking-tight">User Not Found</h1>
+            <p className="text-secondary-600 text-lg mt-1">The user you're looking for doesn't exist</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const user = userData;
   const syncedDevices = syncedDevicesData || [];

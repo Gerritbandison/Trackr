@@ -1,21 +1,78 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { FiArrowLeft, FiUsers, FiDollarSign, FiCalendar, FiKey } from 'react-icons/fi';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
+import { FiArrowLeft, FiUsers, FiDollarSign, FiCalendar, FiKey, FiUserPlus } from 'react-icons/fi';
 import { licensesAPI } from '../../config/api';
+import { useAuth } from '../../contexts/AuthContext';
 import LoadingSpinner from '../../components/Common/LoadingSpinner';
 import Badge, { getStatusVariant } from '../../components/Common/Badge';
+import LicenseAssignmentModal from '../../components/Licenses/LicenseAssignmentModal';
 import { format } from 'date-fns';
 
 const LicenseDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { canManage } = useAuth();
+  const [showAssignmentModal, setShowAssignmentModal] = useState(false);
 
+  // Fetch license data - skip if creating new license
+  const isNewLicense = location.pathname === '/licenses/new';
   const { data, isLoading } = useQuery({
     queryKey: ['license', id],
     queryFn: () => licensesAPI.getById(id).then((res) => res.data.data),
+    enabled: !!id && !isNewLicense,
   });
 
-  if (isLoading) return <LoadingSpinner />;
+  if (isLoading && !isNewLicense) return <LoadingSpinner />;
+
+  // Handle new license creation
+  if (isNewLicense) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => navigate('/licenses')} 
+            className="btn btn-outline"
+          >
+            <FiArrowLeft />
+          </button>
+          <div>
+            <h1 className="text-4xl font-bold text-secondary-900 tracking-tight">Create New License</h1>
+            <p className="text-secondary-600 text-lg mt-1">Add a new software license to inventory</p>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-body">
+            <p className="text-center text-secondary-600 py-8">
+              License creation form will be displayed here
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle case where license doesn't exist
+  if (!data) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => navigate('/licenses')} 
+            className="btn btn-outline"
+          >
+            <FiArrowLeft />
+          </button>
+          <div>
+            <h1 className="text-4xl font-bold text-secondary-900 tracking-tight">License Not Found</h1>
+            <p className="text-secondary-600 text-lg mt-1">The license you're looking for doesn't exist</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const license = data;
   const usedSeats = license.assignedUsers?.length || 0;
@@ -170,8 +227,21 @@ const LicenseDetails = () => {
 
           <div className="card">
             <div className="card-header">
-              <h3 className="text-xl font-semibold text-secondary-900">Assigned Users</h3>
-              <p className="text-sm text-secondary-500 mt-1">{usedSeats} out of {license.totalSeats} seats in use</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-semibold text-secondary-900">Assigned Users</h3>
+                  <p className="text-sm text-secondary-500 mt-1">{usedSeats} out of {license.totalSeats} seats in use</p>
+                </div>
+                {canManage() && (
+                  <button
+                    onClick={() => setShowAssignmentModal(true)}
+                    className="btn btn-primary flex items-center gap-2"
+                  >
+                    <FiUserPlus size={18} />
+                    Manage Assignments
+                  </button>
+                )}
+              </div>
             </div>
             <div className="card-body">
               {license.assignedUsers && license.assignedUsers.length > 0 ? (
@@ -243,6 +313,16 @@ const LicenseDetails = () => {
           </div>
         </div>
       </div>
+
+      {/* License Assignment Modal */}
+      {canManage() && (
+        <LicenseAssignmentModal
+          license={license}
+          isOpen={showAssignmentModal}
+          onClose={() => setShowAssignmentModal(false)}
+          onSuccess={() => setShowAssignmentModal(false)}
+        />
+      )}
     </div>
   );
 };

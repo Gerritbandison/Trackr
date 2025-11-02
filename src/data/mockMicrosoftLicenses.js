@@ -394,9 +394,9 @@ export const mockMicrosoftLicenses = {
     },
     {
       userId: 'b2c3d4e5-f6a7-8901-bcde-f23456789012',
-      displayName: 'Sarah Johnson',
-      mail: 'sarah.johnson@company.com',
-      userPrincipalName: 'sarah.johnson@company.com',
+              displayName: 'Gerrit Johnson',
+        mail: 'gerrit.johnson@company.com',
+        userPrincipalName: 'gerrit.johnson@company.com',
       licenses: [
         { skuId: '6fd2c87f-b296-42f0-b197-1e91e994b900', skuPartNumber: 'Microsoft 365 E3', name: 'Microsoft 365 E3' },
         { skuId: 'e7f8a9b0-c1d2-e3f4-a5b6-c7d8e9f0a1b2', skuPartNumber: 'Enterprise Mobility + Security E5', name: 'Enterprise Mobility + Security E5' },

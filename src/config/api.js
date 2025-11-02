@@ -37,14 +37,25 @@ api.interceptors.response.use(
       try {
         const refreshToken = localStorage.getItem('refreshToken');
         if (refreshToken) {
+          // Use axios directly to avoid interceptor loop
           const response = await axios.post(`${API_URL}/auth/refresh`, {
             refreshToken,
+          }, {
+            headers: {
+              'Content-Type': 'application/json',
+            },
           });
 
-          const { token } = response.data;
-          localStorage.setItem('token', token);
+          // Store both new tokens
+          if (response.data.token) {
+            localStorage.setItem('token', response.data.token);
+          }
+          if (response.data.refreshToken) {
+            localStorage.setItem('refreshToken', response.data.refreshToken);
+          }
 
-          originalRequest.headers.Authorization = `Bearer ${token}`;
+          // Update the original request with new token
+          originalRequest.headers.Authorization = `Bearer ${response.data.token}`;
           return api(originalRequest);
         }
       } catch (refreshError) {

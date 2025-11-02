@@ -30,7 +30,7 @@ const RecentActivity = () => {
       id: 2,
       type: 'license_created',
       icon: FiKey,
-      user: 'Sarah Johnson',
+      user: 'Gerrit Johnson',
       action: 'created',
       resource: 'Microsoft 365 E5',
       resourceType: 'license',

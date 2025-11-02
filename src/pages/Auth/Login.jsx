@@ -92,7 +92,7 @@ const Login = () => {
       </div>
 
       {/* Right Side - Login Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-gray-50">
+      <div className="flex-1 flex items-center justify-center p-8 bg-gradient-to-br from-slate-50 to-gray-100">
         <div className="max-w-md w-full">
           <div className="lg:hidden mb-8 text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
@@ -105,7 +105,7 @@ const Login = () => {
           </div>
 
           {/* Login Card */}
-          <div className="bg-white rounded-2xl shadow-strong border border-gray-100 p-8">
+          <div className="bg-gradient-to-br from-white to-slate-50 rounded-2xl shadow-strong border-2 border-slate-200 p-8">
             <div className="mb-8">
               <h2 className="text-3xl font-bold text-secondary-900 mb-2">
                 Welcome Back
@@ -177,7 +177,7 @@ const Login = () => {
               </p>
               <div className="space-y-2">
                 <button
-                  onClick={() => quickLogin('sarah.johnson@company.com', 'password123')}
+                  onClick={() => quickLogin('gerrit.johnson@company.com', 'password123')}
                   className="w-full px-4 py-2.5 bg-red-50 border border-red-200 text-red-700 rounded-lg hover:bg-red-100 transition-colors font-medium text-sm flex items-center justify-between group"
                   disabled={loading}
                 >

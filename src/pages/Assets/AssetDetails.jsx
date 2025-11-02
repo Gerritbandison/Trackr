@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { 
   FiArrowLeft, FiEdit, FiTrash2, FiUserMinus, FiShoppingCart, FiPackage,
   FiUser, FiMapPin, FiDollarSign, FiShield, FiClock, FiCheckCircle, FiRefreshCw 
@@ -19,10 +19,13 @@ import DepreciationCard from '../../components/Common/DepreciationCard';
 import EOLCard from '../../components/Common/EOLCard';
 import EOLBadge from '../../components/Common/EOLBadge';
 import QRCodeGenerator from '../../components/Common/QRCodeGenerator';
+import MaintenanceSchedule from '../../components/Common/MaintenanceSchedule';
+import AssetDisposal from '../../components/Common/AssetDisposal';
 
 const AssetDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { canManage } = useAuth();
   const queryClient = useQueryClient();
   const [showEditModal, setShowEditModal] = useState(false);
@@ -30,10 +33,12 @@ const AssetDetails = () => {
   const [warrantyData, setWarrantyData] = useState(null);
   const [showWarrantyModal, setShowWarrantyModal] = useState(false);
 
-  // Fetch asset details
+  // Fetch asset details - skip if creating new asset
+  const isNewAsset = location.pathname === '/assets/new';
   const { data, isLoading } = useQuery({
     queryKey: ['asset', id],
     queryFn: () => assetsAPI.getById(id).then((res) => res.data.data),
+    enabled: !!id && !isNewAsset, // Don't fetch if creating new asset or id is falsy
   });
 
   // Unassign mutation
@@ -109,9 +114,59 @@ const AssetDetails = () => {
     warrantyLookupMutation.mutate(autoUpdate);
   };
 
-  if (isLoading) return <LoadingSpinner />;
+  // Handle loading state
+  if (isLoading && !isNewAsset) return <LoadingSpinner />;
+
+  // Handle new asset creation
+  if (isNewAsset) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => navigate('/assets')} 
+            className="btn btn-outline"
+          >
+            <FiArrowLeft />
+          </button>
+          <div>
+            <h1 className="text-4xl font-bold text-secondary-900 tracking-tight">Create New Asset</h1>
+            <p className="text-secondary-600 text-lg mt-1">Add a new hardware asset to inventory</p>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-body">
+            <AssetForm 
+              asset={null} 
+              onSuccess={() => navigate('/assets')} 
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const asset = data;
+
+  // Handle case where asset doesn't exist
+  if (!asset) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => navigate('/assets')} 
+            className="btn btn-outline"
+          >
+            <FiArrowLeft />
+          </button>
+          <div>
+            <h1 className="text-4xl font-bold text-secondary-900 tracking-tight">Asset Not Found</h1>
+            <p className="text-secondary-600 text-lg mt-1">The asset you're looking for doesn't exist</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Build lifecycle timeline
   const timelineEvents = [
@@ -409,6 +464,14 @@ const AssetDetails = () => {
 
           {/* End-of-Life Status */}
           <EOLCard asset={asset} />
+
+          {/* Maintenance Schedule */}
+          <MaintenanceSchedule asset={asset} />
+
+          {/* Asset Disposal */}
+          {canManage() && (
+            <AssetDisposal asset={asset} onDisposeComplete={() => navigate('/assets')} />
+          )}
 
           {/* Notes */}
           {asset.notes && (

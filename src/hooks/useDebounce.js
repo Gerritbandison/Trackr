@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 
 /**
- * Custom hook for debouncing values
+ * Debounce hook for optimizing search and filtering
  * @param {any} value - The value to debounce
- * @param {number} delay - Delay in milliseconds (default: 500ms)
- * @returns {any} - The debounced value
+ * @param {number} delay - Delay in milliseconds
+ * @returns {any} - Debounced value
  */
-export const useDebounce = (value, delay = 500) => {
+export const useDebounce = (value, delay = 300) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
 
   useEffect(() => {
@@ -23,4 +23,3 @@ export const useDebounce = (value, delay = 500) => {
 };
 
 export default useDebounce;
-

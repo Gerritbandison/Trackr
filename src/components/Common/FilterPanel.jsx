@@ -4,22 +4,26 @@ import { FiFilter, FiX, FiChevronDown } from 'react-icons/fi';
 /**
  * Advanced filter panel component
  */
-const FilterPanel = ({ filters, onApply, onClear }) => {
+const FilterPanel = ({ filters, onFiltersChange, filterOptions }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeFilters, setActiveFilters] = useState({});
 
-  const handleApply = () => {
-    onApply(activeFilters);
-    setIsOpen(false);
+  const handleFilterChange = (key, value) => {
+    onFiltersChange({
+      ...filters,
+      [key]: value,
+    });
   };
 
   const handleClear = () => {
-    setActiveFilters({});
-    onClear();
+    const clearedFilters = {};
+    Object.keys(filters).forEach(key => {
+      clearedFilters[key] = 'all';
+    });
+    onFiltersChange(clearedFilters);
     setIsOpen(false);
   };
 
-  const activeCount = Object.values(activeFilters).filter(Boolean).length;
+  const activeCount = Object.values(filters).filter(value => value !== 'all').length;
 
   return (
     <div className="relative">
@@ -48,83 +52,49 @@ const FilterPanel = ({ filters, onApply, onClear }) => {
           {/* Panel */}
           <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-2xl border border-gray-200 z-30">
             {/* Header */}
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-              <h3 className="font-semibold text-gray-900">Advanced Filters</h3>
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-1 hover:bg-gray-100 rounded transition-colors"
+                className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <FiX size={18} />
               </button>
             </div>
 
-            {/* Filters */}
-            <div className="p-4 max-h-96 overflow-y-auto space-y-4">
-              {filters.map((filter) => (
-                <div key={filter.key}>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {filter.label}
+            {/* Filter Content */}
+            <div className="p-4 space-y-4">
+              {filterOptions && Object.entries(filterOptions).map(([key, options]) => (
+                <div key={key}>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 capitalize">
+                    {key.replace(/([A-Z])/g, ' $1').trim()}
                   </label>
-                  {filter.type === 'select' ? (
-                    <select
-                      value={activeFilters[filter.key] || ''}
-                      onChange={(e) =>
-                        setActiveFilters({ ...activeFilters, [filter.key]: e.target.value })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-                    >
-                      <option value="">All</option>
-                      {filter.options.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  ) : filter.type === 'date' ? (
-                    <input
-                      type="date"
-                      value={activeFilters[filter.key] || ''}
-                      onChange={(e) =>
-                        setActiveFilters({ ...activeFilters, [filter.key]: e.target.value })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-                    />
-                  ) : filter.type === 'number' ? (
-                    <input
-                      type="number"
-                      value={activeFilters[filter.key] || ''}
-                      onChange={(e) =>
-                        setActiveFilters({ ...activeFilters, [filter.key]: e.target.value })
-                      }
-                      placeholder={filter.placeholder}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-                    />
-                  ) : (
-                    <input
-                      type="text"
-                      value={activeFilters[filter.key] || ''}
-                      onChange={(e) =>
-                        setActiveFilters({ ...activeFilters, [filter.key]: e.target.value })
-                      }
-                      placeholder={filter.placeholder}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-                    />
-                  )}
+                  <select
+                    value={filters[key] || 'all'}
+                    onChange={(e) => handleFilterChange(key, e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  >
+                    {options.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               ))}
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-gray-200 flex items-center justify-between">
+            <div className="flex items-center justify-between p-4 border-t border-gray-200">
               <button
                 onClick={handleClear}
-                className="text-sm text-gray-600 hover:text-gray-900 font-medium"
+                className="text-sm text-gray-600 hover:text-gray-800 transition-colors"
               >
                 Clear All
               </button>
               <button
-                onClick={handleApply}
-                className="btn btn-primary btn-sm"
+                onClick={() => setIsOpen(false)}
+                className="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"
               >
                 Apply Filters
               </button>
@@ -137,4 +107,3 @@ const FilterPanel = ({ filters, onApply, onClear }) => {
 };
 
 export default FilterPanel;
-

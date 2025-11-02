@@ -17,7 +17,7 @@ const Layout = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gradient-to-br from-slate-100 via-slate-50 to-gray-50">
       {/* Sidebar */}
       <Sidebar 
         collapsed={sidebarCollapsed} 
@@ -27,9 +27,9 @@ const Layout = () => {
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100">
         <Header onToggleSidebar={toggleMobileSidebar} />
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-6 bg-gradient-to-br from-slate-50 to-slate-100">
           <Outlet />
         </main>
       </div>

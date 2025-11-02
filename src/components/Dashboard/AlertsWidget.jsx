@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import {
   FiAlertCircle,
@@ -65,96 +66,126 @@ const AlertsWidget = () => {
 
   if (visibleAlerts.length === 0) {
     return (
-      <div className="card bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
-        <div className="card-body text-center py-8">
-          <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-            <FiAlertCircle className="text-green-600" size={32} />
+      <div className="relative overflow-hidden bg-gradient-to-br from-success-50 via-emerald-50/50 to-white rounded-3xl border-2 border-success-200 shadow-lg">
+        <div className="p-8 text-center">
+          <div className="relative w-20 h-20 rounded-3xl bg-gradient-to-br from-success-500 to-success-600 flex items-center justify-center mx-auto mb-5 shadow-lg">
+            <FiAlertCircle className="text-white" size={36} strokeWidth={2.5} />
+            <div className="absolute inset-0 rounded-3xl bg-white/20 animate-pulse"></div>
           </div>
-          <h3 className="text-lg font-semibold text-green-900 mb-2">All Clear!</h3>
-          <p className="text-sm text-green-700">No active alerts at this time</p>
+          <h3 className="text-2xl font-bold text-success-900 mb-2">All Clear! ✨</h3>
+          <p className="text-sm text-success-700 font-medium">No active alerts at this time</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="card">
-      <div className="card-header bg-gradient-to-r from-red-50 to-transparent">
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
-            <FiAlertCircle className="text-red-600" size={20} />
+    <div className="relative overflow-hidden bg-gradient-to-br from-white via-slate-50/30 to-white rounded-3xl border-2 border-slate-200 shadow-lg hover:shadow-xl transition-all duration-300">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-red-50 via-red-50/30 to-transparent px-6 py-5 border-b-2 border-slate-200">
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-red-600 to-red-500 flex items-center justify-center shadow-lg">
+              <FiAlertCircle className="text-white" size={22} strokeWidth={2.5} />
+            </div>
+            <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white animate-ping"></div>
+            <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white"></div>
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-secondary-900">Active Alerts</h3>
-            <p className="text-sm text-secondary-600">{visibleAlerts.length} items require attention</p>
+            <h3 className="text-xl font-bold text-slate-900">Active Alerts</h3>
+            <p className="text-sm text-slate-600 font-medium">{visibleAlerts.length} items require attention</p>
           </div>
         </div>
       </div>
-      <div className="card-body">
-        <div className="space-y-3">
+
+      {/* Alerts List */}
+      <div className="p-6">
+        <div className="space-y-4">
           {visibleAlerts.map((alert) => (
             <div
               key={alert.id}
-              className={`group relative p-4 rounded-lg border-2 ${
+              className={`group relative overflow-hidden rounded-2xl border-2 transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 ${
                 alert.type === 'critical'
-                  ? 'border-red-200 bg-red-50'
+                  ? 'border-red-200 bg-gradient-to-br from-red-50/50 to-red-50/30'
                   : alert.type === 'warning'
-                  ? 'border-yellow-200 bg-yellow-50'
-                  : 'border-blue-200 bg-blue-50'
-              } hover:shadow-md transition-all duration-200`}
+                  ? 'border-accent-200 bg-gradient-to-br from-accent-50/50 to-yellow-50/30'
+                  : 'border-primary-200 bg-gradient-to-br from-primary-50/50 to-blue-50/30'
+              }`}
             >
+              {/* Hover gradient overlay */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${
+                alert.type === 'critical'
+                  ? 'from-red-600 to-red-700'
+                  : alert.type === 'warning'
+                  ? 'from-accent-600 to-amber-700'
+                  : 'from-primary-600 to-blue-700'
+              } opacity-0 group-hover:opacity-5 transition-opacity`}></div>
+
+              {/* Dismiss button */}
               <button
                 onClick={() => handleDismiss(alert.id)}
-                className="absolute top-2 right-2 p-1 rounded-lg hover:bg-white/50 transition-colors opacity-0 group-hover:opacity-100"
+                className="absolute top-3 right-3 p-2 rounded-xl hover:bg-white/70 transition-all opacity-0 group-hover:opacity-100 z-10"
               >
-                <FiX size={16} className="text-gray-500" />
+                <FiX size={18} className="text-slate-600" strokeWidth={2.5} />
               </button>
 
-              <Link to={alert.href} className="flex items-start gap-3">
+              {/* Decorative dot */}
+              <div className={`absolute top-4 left-4 w-2 h-2 rounded-full ${
+                alert.type === 'critical'
+                  ? 'bg-red-500'
+                  : alert.type === 'warning'
+                  ? 'bg-accent-500'
+                  : 'bg-primary-500'
+              } animate-pulse`}></div>
+
+              <Link to={alert.href} className="flex items-start gap-4 p-5">
+                {/* Icon */}
                 <div
-                  className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                  className={`relative w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 ${
                     alert.color === 'red'
-                      ? 'bg-red-100'
+                      ? 'bg-gradient-to-br from-red-600 to-red-700'
                       : alert.color === 'yellow'
-                      ? 'bg-yellow-100'
-                      : 'bg-blue-100'
+                      ? 'bg-gradient-to-br from-accent-600 to-amber-700'
+                      : 'bg-gradient-to-br from-primary-600 to-blue-700'
                   }`}
                 >
-                  <alert.icon
-                    className={`${
-                      alert.color === 'red'
-                        ? 'text-red-600'
-                        : alert.color === 'yellow'
-                        ? 'text-yellow-600'
-                        : 'text-blue-600'
-                    }`}
-                    size={20}
-                  />
+                  {React.createElement(alert.icon, { className: "text-white", size: 22, strokeWidth: 2.5 })}
+                  <div className="absolute inset-0 rounded-2xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 </div>
+
+                {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-semibold text-gray-900 text-sm">{alert.title}</h4>
-                    <Badge
-                      variant={alert.type === 'critical' ? 'danger' : alert.type === 'warning' ? 'warning' : 'info'}
-                      text={alert.count.toString()}
-                    />
+                  <div className="flex items-center gap-3 mb-2">
+                    <h4 className="font-bold text-slate-900 text-sm">{alert.title}</h4>
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                      alert.type === 'critical'
+                        ? 'bg-red-100 text-red-700 border border-red-200'
+                        : alert.type === 'warning'
+                        ? 'bg-accent-100 text-accent-700 border border-accent-200'
+                        : 'bg-primary-100 text-primary-700 border border-primary-200'
+                    }`}>
+                      {alert.count}
+                    </span>
                   </div>
-                  <p className="text-sm text-gray-600">{alert.message}</p>
+                  <p className="text-sm text-slate-600 font-medium">{alert.message}</p>
                 </div>
-                <FiChevronRight className="text-gray-400 group-hover:text-gray-600 transition-colors" size={20} />
+
+                {/* Arrow */}
+                <FiChevronRight className="text-slate-400 group-hover:text-slate-600 group-hover:translate-x-1 transition-all flex-shrink-0" size={20} />
               </Link>
             </div>
           ))}
         </div>
 
+        {/* View All Link */}
         {visibleAlerts.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="mt-6 pt-6 border-t-2 border-slate-200">
             <Link
               to="/alerts"
-              className="flex items-center justify-center gap-2 text-sm font-medium text-accent-600 hover:text-accent-700 transition-colors"
+              className="flex items-center justify-center gap-2 text-sm font-bold text-primary-600 hover:text-primary-700 transition-colors group/link"
             >
               View All Alerts
-              <FiChevronRight size={16} />
+              <FiChevronRight size={18} className="group-hover/link:translate-x-1 transition-transform" />
             </Link>
           </div>
         )}

@@ -1,21 +1,21 @@
 const Badge = ({ children, variant = 'gray', size = 'md' }) => {
   const variants = {
-    success: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-    warning: 'bg-amber-50 text-amber-700 border border-amber-200',
-    danger: 'bg-red-50 text-red-700 border border-red-200',
-    info: 'bg-blue-50 text-blue-700 border border-blue-200',
-    gray: 'bg-secondary-50 text-secondary-700 border border-secondary-200',
-    primary: 'bg-primary-50 text-primary-700 border border-primary-200',
+    success: 'bg-gradient-to-r from-success-50 to-emerald-50 text-success-700 border-2 border-success-200 font-bold shadow-sm',
+    warning: 'bg-gradient-to-r from-accent-50 to-amber-50 text-accent-700 border-2 border-accent-200 font-bold shadow-sm',
+    danger: 'bg-gradient-to-r from-red-50 to-red-50 text-red-700 border-2 border-red-200 font-bold shadow-sm',
+    info: 'bg-gradient-to-r from-primary-50 to-blue-50 text-primary-700 border-2 border-primary-200 font-bold shadow-sm',
+    gray: 'bg-gradient-to-r from-slate-50 to-gray-50 text-slate-700 border-2 border-slate-200 font-bold shadow-sm',
+    primary: 'bg-gradient-to-r from-primary-50 to-cyan-50 text-primary-700 border-2 border-primary-200 font-bold shadow-sm',
   };
 
   const sizes = {
-    sm: 'text-xs px-2 py-0.5',
-    md: 'text-xs px-2.5 py-1',
-    lg: 'text-sm px-3 py-1.5',
+    sm: 'text-xs px-3 py-1',
+    md: 'text-xs px-3.5 py-1.5',
+    lg: 'text-sm px-4 py-2',
   };
 
   return (
-    <span className={`inline-flex items-center rounded-full font-semibold capitalize ${variants[variant]} ${sizes[size]}`}>
+    <span className={`inline-flex items-center rounded-full capitalize ${variants[variant]} ${sizes[size]}`}>
       {children}
     </span>
   );
