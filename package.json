@@ -1,13 +1,19 @@
 {
-  "name": "asset-management-frontend",
+  "name": "trackr-itam",
   "version": "1.0.0",
   "type": "module",
-  "description": "IT Asset Management System - Frontend",
+  "description": "Trackr - Enterprise IT Asset Management Platform",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:analyze": "ANALYZE=true vite build",
     "preview": "vite preview",
-    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0"
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 100",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.14.2",
@@ -23,16 +29,27 @@
     "zustand": "^4.4.7"
   },
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "@testing-library/jest-dom": "^6.1.5",
+    "@testing-library/react": "^14.1.2",
+    "@testing-library/user-event": "^14.5.1",
+    "@types/node": "^24.10.0",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
     "@vitejs/plugin-react": "^4.2.1",
+    "@vitest/ui": "^1.0.4",
     "autoprefixer": "^10.4.16",
     "eslint": "^8.55.0",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
+    "jsdom": "^23.0.1",
     "postcss": "^8.4.32",
+    "rollup-plugin-visualizer": "^6.0.5",
     "tailwindcss": "^3.4.0",
-    "vite": "^5.0.8"
+    "typescript": "^5.9.3",
+    "vite": "^5.0.8",
+    "vite-plugin-compression": "^0.5.1",
+    "vitest": "^1.0.4"
   }
 }

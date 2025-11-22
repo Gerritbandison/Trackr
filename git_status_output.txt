@@ -1,0 +1,136 @@
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	new file:   # ITAM App Refactoring Plan: Enterprise .md
+	new file:   .eslintrc.cjs
+	modified:   README.md
+	new file:   TECHNICAL_DEBT_CLEANUP.md
+	new file:   backend/package-lock.json
+	new file:   backend/package.json
+	new file:   backend/src/core/middleware/audit.middleware.ts
+	new file:   backend/src/core/middleware/error.middleware.ts
+	new file:   backend/src/modules/assets/asset.model.ts
+	new file:   backend/src/modules/assets/asset.routes.ts
+	new file:   backend/src/modules/assets/asset.service.ts
+	new file:   backend/src/modules/history/history.model.ts
+	new file:   backend/src/server.ts
+	new file:   backend/tsconfig.json
+	new file:   docs/refactoring/AddAssetForm-Refactoring.md
+	new file:   frontend
+	modified:   index.html
+	new file:   lint_output.txt
+	modified:   package-lock.json
+	modified:   package.json
+	deleted:    src/App.jsx
+	deleted:    src/components/Charts/AvailabilityChart.jsx
+	deleted:    src/components/Charts/GaugeChart.jsx
+	deleted:    src/components/Charts/HeatmapChart.jsx
+	deleted:    src/components/Common/ActivityFeed.jsx
+	deleted:    src/components/Common/ActivityTimeline.jsx
+	deleted:    src/components/Common/AlertModal.jsx
+	deleted:    src/components/Common/Badge.jsx
+	deleted:    src/components/Common/BatchProgress.jsx
+	deleted:    src/components/Common/BulkActions.jsx
+	deleted:    src/components/Common/ColumnToggle.jsx
+	deleted:    src/components/Common/ConfirmDialog.jsx
+	deleted:    src/components/Common/DataTable.jsx
+	deleted:    src/components/Common/DepreciationCard.jsx
+	deleted:    src/components/Common/EOLBadge.jsx
+	deleted:    src/components/Common/EOLCard.jsx
+	deleted:    src/components/Common/EmptyState.jsx
+	deleted:    src/components/Common/ExportMenu.jsx
+	deleted:    src/components/Common/FilterPanel.jsx
+	deleted:    src/components/Common/GlobalSearch.jsx
+	deleted:    src/components/Common/InlineEdit.jsx
+	deleted:    src/components/Common/IntegrationConfigModal.jsx
+	deleted:    src/components/Common/KeyboardShortcutsHelp.jsx
+	deleted:    src/components/Common/LoadingSkeleton.jsx
+	deleted:    src/components/Common/LoadingSpinner.jsx
+	deleted:    src/components/Common/Modal.jsx
+	deleted:    src/components/Common/NotificationPanel.jsx
+	deleted:    src/components/Common/Pagination.jsx
+	deleted:    src/components/Common/ProgressBar.jsx
+	deleted:    src/components/Common/QRCodeGenerator.jsx
+	deleted:    src/components/Common/QuickViewModal.jsx
+	deleted:    src/components/Common/SavedFilters.jsx
+	deleted:    src/components/Common/SearchBar.jsx
+	deleted:    src/components/Common/SortableTable.jsx
+	deleted:    src/components/Common/StatCard.jsx
+	deleted:    src/components/Common/Toast.jsx
+	deleted:    src/components/Common/Tooltip.jsx
+	deleted:    src/components/Common/TwoFactorSetup.jsx
+	deleted:    src/components/Common/WarrantyTimeline.jsx
+	deleted:    src/components/Dashboard/AlertsWidget.jsx
+	deleted:    src/components/Dashboard/QuickActions.jsx
+	deleted:    src/components/Dashboard/RecentActivity.jsx
+	deleted:    src/components/Layout/Header.jsx
+	deleted:    src/components/Layout/Layout.jsx
+	deleted:    src/components/Layout/Sidebar.jsx
+	deleted:    src/components/Purchasing/CDWProductSelector.jsx
+	deleted:    src/config/api.js
+	deleted:    src/contexts/AuthContext.jsx
+	deleted:    src/data/mockMicrosoftLicenses.js
+	deleted:    src/hooks/useDebounce.js
+	deleted:    src/hooks/useFavorites.js
+	deleted:    src/hooks/useKeyboardShortcuts.js
+	deleted:    src/hooks/useLocalStorage.js
+	deleted:    src/hooks/useRecentItems.js
+	deleted:    src/index.css
+	deleted:    src/main.jsx
+	deleted:    src/pages/AssetGroups/AssetGroupList.jsx
+	deleted:    src/pages/Assets/AssetDetails.jsx
+	deleted:    src/pages/Assets/AssetForm.jsx
+	deleted:    src/pages/Assets/AssetList.jsx
+	deleted:    src/pages/Assets/AssignAssetModal.jsx
+	deleted:    src/pages/Assets/BulkQRGenerator.jsx
+	deleted:    src/pages/Assets/EnhancedAssetList.jsx
+	deleted:    src/pages/Auth/Login.jsx
+	deleted:    src/pages/Compliance/ComplianceOverview.jsx
+	deleted:    src/pages/Dashboard/Dashboard.jsx
+	deleted:    src/pages/Departments/DepartmentDetails.jsx
+	deleted:    src/pages/Departments/DepartmentList.jsx
+	deleted:    src/pages/Finance/FinancialDashboard.jsx
+	deleted:    src/pages/Licenses/LicenseDetails.jsx
+	deleted:    src/pages/Licenses/LicenseForm.jsx
+	deleted:    src/pages/Licenses/LicenseList.jsx
+	deleted:    src/pages/Licenses/LicenseOptimization.jsx
+	deleted:    src/pages/Licenses/LicenseRenewals.jsx
+	deleted:    src/pages/Licenses/LicensesDashboard.jsx
+	deleted:    src/pages/Licenses/MicrosoftLicenses.jsx
+	deleted:    src/pages/OnboardingKits/OnboardingKitDetails.jsx
+	deleted:    src/pages/OnboardingKits/OnboardingKitForm.jsx
+	deleted:    src/pages/OnboardingKits/OnboardingKitList.jsx
+	deleted:    src/pages/Reports/CustomReportBuilder.jsx
+	deleted:    src/pages/Reports/Reports.jsx
+	deleted:    src/pages/Settings/IntegrationStatus.jsx
+	deleted:    src/pages/Settings/Settings.jsx
+	deleted:    src/pages/Settings/TwoFactorSettings.jsx
+	deleted:    src/pages/Spend/SpendOverview.jsx
+	deleted:    src/pages/Users/UserDetails.jsx
+	deleted:    src/pages/Users/UserForm.jsx
+	deleted:    src/pages/Users/UserList.jsx
+	deleted:    src/pages/Warranties/WarrantyDashboard.jsx
+	deleted:    src/tailwind.config.js
+	deleted:    src/utils/departmentIcons.js
+	deleted:    src/utils/depreciation.js
+	deleted:    src/utils/endOfLife.js
+	deleted:    src/utils/licenseOptimization.js
+	deleted:    src/utils/qrCodeGenerator.js
+	deleted:    src/utils/reportBuilder.js
+	deleted:    src/utils/tco.js
+	deleted:    src/utils/twoFactorAuth.js
+	modified:   tailwind.config.js
+	modified:   vite.config.js
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+  (commit or discard the untracked or modified content in submodules)
+	modified:   frontend (modified content, untracked content)
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	git_status_output.txt
+
