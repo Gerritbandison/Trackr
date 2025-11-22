@@ -1,6 +1,18 @@
-# Trackr ITAM - Enterprise IT Asset Management Platform
+# Trackr - IT Asset Management Platform
 
-> A modern, production-ready React application for comprehensive IT asset management, generating up to $700,000 in annual value through license optimization, asset tracking, and operational efficiency.
+A comprehensive IT Asset Management (ITAM) solution built with React and modern web technologies.
+
+## 📁 Monorepo Structure
+
+This project uses a monorepo structure with separate frontend and backend workspaces:
+
+```
+Trackr/
+├── frontend/          # React + Vite frontend application
+├── backend/           # Node.js + TypeScript backend API
+├── package.json       # Root workspace configuration
+└── README.md
+```
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![React](https://img.shields.io/badge/react-18.2.0-blue.svg)
