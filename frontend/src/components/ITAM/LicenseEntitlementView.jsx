@@ -8,7 +8,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { FiUsers, FiPackage, FiKey, FiCheckCircle } from 'react-icons/fi';
 import { itamAPI } from '../../config/api';
-import LoadingSpinner from '../Common/LoadingSpinner';
+import LoadingSpinner from '../ui/LoadingSpinner';
 
 const LicenseEntitlementView = ({ software, onClose }) => {
   const { data: entitlements, isLoading } = useQuery({

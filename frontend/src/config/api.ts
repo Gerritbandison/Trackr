@@ -6,7 +6,7 @@
  * and token refresh. All API endpoints are exported as named exports.
  */
 
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosInstance, AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { getMockDataForEndpoint } from '../utils/mockAPIInterceptor';
 import { shouldLoadTestData } from '../utils/testDataLoader';
 import logger from '../utils/logger';
@@ -84,7 +84,7 @@ api.interceptors.request.use(
         isDev: import.meta.env.DEV,
       },
     });
-    
+
     if (testDataEnabled) {
       const mockResponse = getMockDataForEndpoint(
         config.method?.toUpperCase() || 'GET',
@@ -103,7 +103,7 @@ api.interceptors.request.use(
             mockResponse: mockResponse,
           },
         });
-        
+
         // Mark this request to use mock data
         // Response interceptor will check for this and return mock data
         config._useMockData = true;
@@ -120,7 +120,7 @@ api.interceptors.request.use(
       config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
     return config;
   },
   (error: AxiosError) => {
@@ -132,7 +132,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response: AxiosResponse) => {
     const config = response.config as ExtendedAxiosRequestConfig;
-    
+
     // Check if we should use mock data instead of real response
     // This handles the case where mock data was marked but request didn't reject
     if (config._useMockData && config._mockResponse) {
@@ -149,7 +149,7 @@ api.interceptors.response.use(
           hasPagination: !!(config._mockResponse as any).pagination,
         },
       });
-      
+
       // Return mock data
       // The API method does .then(res => res.data), so we return the mock response directly
       // Mock response is already in format: { data: [...], pagination: {...} }
@@ -176,7 +176,7 @@ api.interceptors.response.use(
   async (error: AxiosError | Error) => {
     const axiosError = error as AxiosError & { isMockRequest?: boolean; mockResponse?: unknown };
     const config = axiosError.config as ExtendedAxiosRequestConfig;
-    
+
     // Handle mock data requests (intercepted in request interceptor)
     if (axiosError.isMockRequest && axiosError.mockResponse) {
       logger.debug(`[Mock API] ✅ Returning mock data for: ${config?.url}`, {
@@ -201,8 +201,8 @@ api.interceptors.response.use(
     // In development mode, always try mock data fallback for these errors
     const isDev = import.meta.env.DEV || import.meta.env.MODE === 'development';
     const shouldFallbackToMock = (isDev || shouldLoadTestData()) && (
-      !axiosError.response || 
-      axiosError.code === 'ECONNABORTED' || 
+      !axiosError.response ||
+      axiosError.code === 'ECONNABORTED' ||
       axiosError.code === 'ERR_NETWORK' ||
       axiosError.response?.status === 401 ||
       axiosError.response?.status === 404 ||
@@ -258,11 +258,11 @@ api.interceptors.response.use(
         message: 'Network error. Please check your connection and try again.',
         code: 'NETWORK_ERROR',
       };
-      
+
       if (DEBUG_MODE) {
         networkError.details = axiosError.message;
       }
-      
+
       return Promise.reject(networkError);
     }
 
@@ -307,12 +307,12 @@ api.interceptors.response.use(
         localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
-        
+
         // Only redirect if not already on login page
         if (window.location.pathname !== '/login') {
           window.location.href = '/login';
         }
-        
+
         return Promise.reject(refreshError);
       }
     }
@@ -566,9 +566,9 @@ export const itamAPI = {
     },
     receiveAsset: (data: Record<string, unknown>) => api.post('/receiving/receive', data),
     bulkReceive: (data: Record<string, unknown>) => api.post('/receiving/bulk-receive', data),
-    printLabel: (id: string, format?: string) => api.get(`/receiving/expected-assets/${id}/label`, { 
-      params: { format }, 
-      responseType: 'blob' 
+    printLabel: (id: string, format?: string) => api.get(`/receiving/expected-assets/${id}/label`, {
+      params: { format },
+      responseType: 'blob'
     }),
   },
   contracts: {

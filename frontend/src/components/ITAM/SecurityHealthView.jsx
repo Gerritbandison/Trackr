@@ -17,7 +17,7 @@ import {
   FiRefreshCw,
 } from 'react-icons/fi';
 import { itamAPI } from '../../config/api';
-import LoadingSpinner from '../Common/LoadingSpinner';
+import LoadingSpinner from '../ui/LoadingSpinner';
 
 const SecurityHealthView = ({ asset, onClose }) => {
   const { data: healthData, isLoading } = useQuery({

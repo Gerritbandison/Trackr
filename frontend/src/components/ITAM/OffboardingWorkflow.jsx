@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { FiUser, FiCheckCircle, FiXCircle, FiSettings, FiPlay } from 'react-icons/fi';
 import { itamAPI, usersAPI } from '../../config/api';
-import LoadingSpinner from '../Common/LoadingSpinner';
+import LoadingSpinner from '../ui/LoadingSpinner';
 import toast from 'react-hot-toast';
 
 const OffboardingWorkflow = ({ onClose }) => {

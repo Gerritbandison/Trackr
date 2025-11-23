@@ -8,7 +8,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { FiTrendingUp, FiTrendingDown, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
 import { itamAPI } from '../../config/api';
-import LoadingSpinner from '../Common/LoadingSpinner';
+import LoadingSpinner from '../ui/LoadingSpinner';
 
 const ContractHealthScore = ({ contractId }) => {
   const { data, isLoading } = useQuery({

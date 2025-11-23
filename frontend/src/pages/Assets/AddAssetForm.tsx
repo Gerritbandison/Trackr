@@ -23,7 +23,7 @@ import { assetsAPI } from '../../config/api';
 // Services
 import { fetchWarrantyFromSerial, WarrantyData } from '../../services/warrantyService';
 import { calculateCompliance } from '../../services/complianceService';
-import { detectFromSerialNumber, AssetCategory } from '../../services/serialPatternService';
+import { detectFromSerialNumber } from '../../services/serialPatternService';
 
 // Components
 import CompliancePreviewCard from '../../features/assets/components/CompliancePreviewCard';
@@ -32,10 +32,6 @@ import AssetIdentificationSection from '../../features/assets/components/AssetId
 import PurchaseInformationSection from '../../features/assets/components/PurchaseInformationSection';
 import StatusConditionSection from '../../features/assets/components/StatusConditionSection';
 import CDWIntegrationSection from '../../features/assets/components/CDWIntegrationSection';
-
-// Type definitions - synced with backend Asset model
-type AssetStatus = 'available' | 'assigned' | 'repair' | 'retired' | 'lost' | 'disposed';
-type AssetCondition = 'excellent' | 'good' | 'fair' | 'poor' | 'damaged';
 
 // Zod Schema for asset form validation - synced with backend validation schema
 const assetFormSchema = z.object({
@@ -58,6 +54,9 @@ const assetFormSchema = z.object({
   cdwSku: z.string().trim().optional().or(z.literal('')),
   cdwUrl: z.string().url('Invalid URL').trim().optional().or(z.literal('')),
   department: z.string().optional().or(z.literal('')),
+  depreciationType: z.enum(['Straight Line', 'Double Declining', 'Sum of Years']).default('Straight Line'),
+  usefulLife: z.coerce.number().min(0, 'Useful life must be positive').default(5),
+  salvageValue: z.coerce.number().min(0, 'Salvage value must be positive').default(0),
 });
 
 type AssetFormData = z.infer<typeof assetFormSchema>;
@@ -122,6 +121,9 @@ const AddAssetForm: React.FC<AddAssetFormProps> = ({
       category: 'laptop',
       status: 'available',
       condition: 'excellent',
+      depreciationType: 'Straight Line',
+      usefulLife: 5,
+      salvageValue: 0,
       ...initialData,
     },
   });
@@ -239,6 +241,59 @@ const AddAssetForm: React.FC<AddAssetFormProps> = ({
           errors={errors}
           warrantyData={warrantyData}
         />
+
+        {/* Financial Information */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Financial Details</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text">Depreciation Type</span>
+              </label>
+              <select
+                {...register('depreciationType')}
+                className="select select-bordered w-full"
+              >
+                <option value="Straight Line">Straight Line</option>
+                <option value="Double Declining">Double Declining</option>
+                <option value="Sum of Years">Sum of Years</option>
+              </select>
+              {errors.depreciationType && (
+                <span className="text-error text-sm mt-1">{errors.depreciationType.message}</span>
+              )}
+            </div>
+
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text">Useful Life (Years)</span>
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                {...register('usefulLife')}
+                className="input input-bordered w-full"
+              />
+              {errors.usefulLife && (
+                <span className="text-error text-sm mt-1">{errors.usefulLife.message}</span>
+              )}
+            </div>
+
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text">Salvage Value ($)</span>
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                {...register('salvageValue')}
+                className="input input-bordered w-full"
+              />
+              {errors.salvageValue && (
+                <span className="text-error text-sm mt-1">{errors.salvageValue.message}</span>
+              )}
+            </div>
+          </div>
+        </div>
 
         {/* Status & Condition */}
         <StatusConditionSection

@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { FiSearch, FiShoppingCart, FiExternalLink, FiLoader } from 'react-icons/fi';
 import { cdwAPI } from '../../config/api';
-import LoadingSpinner from '../Common/LoadingSpinner';
-import Modal from '../Common/Modal';
+import LoadingSpinner from '../ui/LoadingSpinner';
+import Modal from '../ui/Modal';
 import toast from 'react-hot-toast';
 
 const CDWProductSelector = ({ isOpen, onClose, onSelectProduct }) => {
@@ -43,10 +43,10 @@ const CDWProductSelector = ({ isOpen, onClose, onSelectProduct }) => {
     queryKey: ['cdw-products', searchTerm, selectedCategory],
     queryFn: async () => {
       try {
-        const res = await cdwAPI.searchProducts({ 
-          q: searchTerm, 
+        const res = await cdwAPI.searchProducts({
+          q: searchTerm,
           category: selectedCategory === 'all' ? undefined : selectedCategory,
-          limit: 50 
+          limit: 50
         });
         return res.data.data;
       } catch (err) {
@@ -62,22 +62,22 @@ const CDWProductSelector = ({ isOpen, onClose, onSelectProduct }) => {
 
   const filterMockProducts = (products, search, category) => {
     let filtered = products;
-    
+
     // Filter by category
     if (category !== 'all') {
       filtered = filtered.filter(p => p.category === category);
     }
-    
+
     // Filter by search term (skip if search is just whitespace)
     if (search && search.trim().length > 0) {
       const searchLower = search.toLowerCase();
-      filtered = filtered.filter(p => 
+      filtered = filtered.filter(p =>
         p.name.toLowerCase().includes(searchLower) ||
         p.manufacturer.toLowerCase().includes(searchLower) ||
         p.model.toLowerCase().includes(searchLower)
       );
     }
-    
+
     return filtered;
   };
 
@@ -115,7 +115,7 @@ const CDWProductSelector = ({ isOpen, onClose, onSelectProduct }) => {
       cdwSku: product.sku,
       cdwUrl: product.url,
     };
-    
+
     onSelectProduct(assetData);
     onClose();
     toast.success('Product selected from CDW');

@@ -10,9 +10,9 @@ import {
   FiAlertCircle,
 } from 'react-icons/fi';
 import { licensesAPI, usersAPI } from '../../config/api';
-import Badge from '../Common/Badge';
-import Modal from '../Common/Modal';
-import SearchBar from '../Common/SearchBar';
+import Badge from '../ui/Badge';
+import Modal from '../ui/Modal';
+import SearchBar from '../ui/SearchBar';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 

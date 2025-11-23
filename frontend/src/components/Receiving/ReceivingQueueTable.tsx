@@ -7,7 +7,7 @@
 import React from 'react';
 import { FiPackage, FiCheckCircle } from 'react-icons/fi';
 import { format } from 'date-fns';
-import Pagination from '../Common/Pagination.jsx';
+import Pagination from '../ui/Pagination.jsx';
 
 interface ReceivingQueueTableProps {
     expectedAssets: any[];

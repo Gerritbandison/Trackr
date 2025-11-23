@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { FiDownload, FiFileText, FiCalendar, FiShield } from 'react-icons/fi';
 import { itamAPI } from '../../config/api';
-import LoadingSpinner from '../Common/LoadingSpinner';
+import LoadingSpinner from '../ui/LoadingSpinner';
 import toast from 'react-hot-toast';
 
 const AuditPackView = ({ onClose }) => {

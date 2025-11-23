@@ -17,7 +17,7 @@ import { assetsAPI } from '../../config/api';
 import { AssetState, ITAMAsset } from '../../types/itam';
 import { isValidTransition, getValidNextStates, getStateDisplay } from '../../utils/assetStateMachine';
 import toast from 'react-hot-toast';
-import Modal from '../Common/Modal';
+import Modal from '../ui/Modal';
 
 interface AssetStateTransitionProps {
   asset: ITAMAsset;

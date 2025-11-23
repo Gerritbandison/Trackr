@@ -16,6 +16,9 @@ export interface Asset {
   location?: string;
   purchaseDate?: string;
   purchasePrice?: number;
+  depreciationType?: 'Straight Line' | 'Double Declining' | 'Sum of Years';
+  usefulLife?: number;
+  salvageValue?: number;
   warrantyExpiry?: string;
   assignedTo?: {
     _id: string;

@@ -1,0 +1,25 @@
+# Dependencies
+node_modules
+
+# Build
+dist
+
+# Logs
+*.log
+logs
+
+# Environment
+.env*
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+
+# Testing
+coverage
+
+# Development
+nodemon.json

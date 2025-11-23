@@ -200,6 +200,11 @@ export interface ITAMAsset {
   purchase?: PurchaseInfo;
   warranty?: WarrantyInfo;
 
+  // Depreciation
+  depreciationType?: 'Straight Line' | 'Double Declining' | 'Sum of Years';
+  usefulLife?: number;
+  salvageValue?: number;
+
   // Security
   security?: SecurityInfo;
 
