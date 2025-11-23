@@ -12,12 +12,12 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { FiPlus, FiMaximize2 } from 'react-icons/fi';
 import { itamAPI } from '../../../config/api';
-import LoadingSpinner from '../../../components/ui/LoadingSpinner.jsx';
-import Modal from '../../../components/ui/Modal.jsx';
-import SearchBar from '../../../components/ui/SearchBar.jsx';
+import LoadingSpinner from '../../../components/ui/LoadingSpinner.tsx';
+import Modal from '../../../components/ui/Modal.tsx';
+import SearchBar from '../../../components/ui/SearchBar.tsx';
 import toast from 'react-hot-toast';
-import BarcodeScanner from '../../../components/ITAM/BarcodeScanner.jsx';
-import POIngestionForm from '../../../components/ITAM/POIngestionForm.jsx';
+import BarcodeScanner from '../../../components/ITAM/BarcodeScanner.tsx';
+import POIngestionForm from '../../../components/ITAM/POIngestionForm.tsx';
 import { ReceivingStatsCards, ReceivingQueueTable } from '../../../components/Receiving';
 
 interface ExpectedAsset {
