@@ -322,52 +322,54 @@ const Login = () => {
               </div>
             )}
 
-            {/* Quick Login Buttons */}
-            <div className="mt-8 pt-6 border-t border-gray-200">
-              <p className="text-sm font-semibold text-secondary-600 mb-3 flex items-center gap-2">
-                <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
-                Quick Login (Development Only)
-              </p>
-              <div className="space-y-2">
-                <button
-                  onClick={() => quickLogin('gerrit.johnson@company.com', 'password123')}
-                  className="w-full px-4 py-2.5 bg-red-50 border border-red-200 text-red-700 rounded-lg hover:bg-red-100 transition-colors font-medium text-sm flex items-center justify-between group"
-                  disabled={loading}
-                >
-                  <span className="flex items-center gap-2">
-                    <span>👑</span>
-                    <span>Login as Admin</span>
-                  </span>
-                  <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity">Full access →</span>
-                </button>
-                <button
-                  onClick={() =>
-                    quickLogin('michael.chen@company.com', 'password123')
-                  }
-                  className="w-full px-4 py-2.5 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors font-medium text-sm flex items-center justify-between group"
-                  disabled={loading}
-                >
-                  <span className="flex items-center gap-2">
-                    <span>🎯</span>
-                    <span>Login as Manager</span>
-                  </span>
-                  <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity">Manage assets →</span>
-                </button>
-                <button
-                  onClick={() =>
-                    quickLogin('emily.rodriguez@company.com', 'password123')
-                  }
-                  className="w-full px-4 py-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-colors font-medium text-sm flex items-center justify-between group"
-                  disabled={loading}
-                >
-                  <span className="flex items-center gap-2">
-                    <span>👤</span>
-                    <span>Login as Staff</span>
-                  </span>
-                  <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity">View only →</span>
-                </button>
+            {/* Quick Login Buttons - Development Only */}
+            {import.meta.env.DEV && (
+              <div className="mt-8 pt-6 border-t border-gray-200">
+                <p className="text-sm font-semibold text-secondary-600 mb-3 flex items-center gap-2">
+                  <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
+                  Quick Login (Development Only)
+                </p>
+                <div className="space-y-2">
+                  <button
+                    onClick={() => quickLogin('gerrit.johnson@company.com', 'password123')}
+                    className="w-full px-4 py-2.5 bg-red-50 border border-red-200 text-red-700 rounded-lg hover:bg-red-100 transition-colors font-medium text-sm flex items-center justify-between group"
+                    disabled={loading}
+                  >
+                    <span className="flex items-center gap-2">
+                      <span>👑</span>
+                      <span>Login as Admin</span>
+                    </span>
+                    <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity">Full access →</span>
+                  </button>
+                  <button
+                    onClick={() =>
+                      quickLogin('michael.chen@company.com', 'password123')
+                    }
+                    className="w-full px-4 py-2.5 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors font-medium text-sm flex items-center justify-between group"
+                    disabled={loading}
+                  >
+                    <span className="flex items-center gap-2">
+                      <span>🎯</span>
+                      <span>Login as Manager</span>
+                    </span>
+                    <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity">Manage assets →</span>
+                  </button>
+                  <button
+                    onClick={() =>
+                      quickLogin('emily.rodriguez@company.com', 'password123')
+                    }
+                    className="w-full px-4 py-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-colors font-medium text-sm flex items-center justify-between group"
+                    disabled={loading}
+                  >
+                    <span className="flex items-center gap-2">
+                      <span>👤</span>
+                      <span>Login as Staff</span>
+                    </span>
+                    <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity">View only →</span>
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Features */}
