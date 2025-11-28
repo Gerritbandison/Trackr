@@ -6,6 +6,10 @@ import mongoose from 'mongoose';
 import rateLimit from 'express-rate-limit';
 import assetRoutes from './modules/assets/asset.routes';
 import authRoutes from './modules/auth/auth.routes';
+import userRoutes from './modules/users/user.routes';
+import licenseRoutes from './modules/licenses/license.routes';
+import departmentRoutes from './modules/departments/department.routes';
+import vendorRoutes from './modules/vendors/vendor.routes';
 import { errorHandler } from './core/middleware/error.middleware';
 import { auditMiddleware } from './core/middleware/audit.middleware';
 
@@ -63,7 +67,11 @@ app.get('/health', (req, res) => {
 
 // Routes
 app.use('/api/v1/auth', authLimiter, authRoutes);
+app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/assets', assetRoutes);
+app.use('/api/v1/licenses', licenseRoutes);
+app.use('/api/v1/departments', departmentRoutes);
+app.use('/api/v1/vendors', vendorRoutes);
 
 // Error Handling
 app.use(errorHandler);
