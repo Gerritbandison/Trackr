@@ -15,11 +15,18 @@ import { errorHandler } from './core/middleware/error.middleware';
 import { auditMiddleware } from './core/middleware/audit.middleware';
 import logger from './core/utils/logger';
 import { swaggerSpec } from './core/config/swagger';
+import {
+    initializeSentry,
+    sentryErrorHandler
+} from './core/config/sentry';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Initialize Sentry (must be first, before any middleware)
+initializeSentry(app);
 
 // Rate limiting configuration
 const authLimiter = rateLimit({
@@ -64,13 +71,13 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 }));
 
 // Swagger JSON endpoint
-app.get('/api-docs.json', (req, res) => {
+app.get('/api-docs.json', (_req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.send(swaggerSpec);
 });
 
 // Health Check Endpoint
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
     const healthcheck = {
         uptime: process.uptime(),
         message: 'OK',
@@ -87,6 +94,9 @@ app.use('/api/v1/assets', assetRoutes);
 app.use('/api/v1/licenses', licenseRoutes);
 app.use('/api/v1/departments', departmentRoutes);
 app.use('/api/v1/vendors', vendorRoutes);
+
+// Sentry error handler (must be before other error handlers, after routes)
+app.use(sentryErrorHandler);
 
 // Error Handling
 app.use(errorHandler);
