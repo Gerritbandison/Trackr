@@ -331,10 +331,11 @@ npm run test:e2e:ui    # Interactive E2E UI
 ## 📚 Documentation
 
 Additional documentation available in the repository:
-- `Q2_2025_COMPLETE.md` - Q2 feature completion report
-- `FINAL_SUMMARY.md` - Complete implementation summary
-- `FEATURES_ROADMAP.md` - Future feature roadmap
-- `DEPLOYMENT_READY.md` - Deployment checklist
+- `QUICK_REFERENCE.md` - Quick reference guide for common operations
+- `TROUBLESHOOTING_GUIDE.md` - Comprehensive troubleshooting guide
+- `DOCKER.md` - Docker setup and deployment guide
+- `backend/.env.example` - Backend environment configuration template
+- `frontend/docs/` - Frontend-specific documentation and guides
 
 ## 🐛 Troubleshooting
 

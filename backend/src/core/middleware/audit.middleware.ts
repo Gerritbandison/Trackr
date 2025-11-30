@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import HistoryLog from '../../modules/history/history.model';
+import logger from '../utils/logger';
 
 // Extend Request to include user info (mocked for now as we don't have full auth)
 interface AuthenticatedRequest extends Request {
@@ -49,9 +50,9 @@ export const auditMiddleware = async (req: AuthenticatedRequest, res: Response, 
                     resourceId: finalResourceId,
                     newValue: req.body, // Log the payload as new value
                     // previousValue: ... // fetching previous value requires pre-hook or specific service logic
-                }).catch(err => console.error('Audit Log Error:', err));
+                }).catch(err => logger.error('Audit Log Error:', err));
             } catch (err) {
-                console.error('Audit Log Error:', err);
+                logger.error('Audit Log Error:', err);
             }
         }
 

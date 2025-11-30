@@ -1,9 +1,35 @@
 import { Router, Request, Response, NextFunction } from 'express';
+import { body, param } from 'express-validator';
 import { assetService } from './asset.service';
+import { authenticate, authorize } from '../../core/middleware/auth.middleware';
 
 const router = Router();
 
-// Get all assets
+// Validation rules
+const createAssetValidation = [
+    body('assetTag').trim().notEmpty().withMessage('Asset tag is required'),
+    body('name').trim().notEmpty().withMessage('Name is required'),
+    body('category').trim().notEmpty().withMessage('Category is required'),
+    body('status').isIn(['available', 'in-use', 'maintenance', 'retired']).withMessage('Invalid status'),
+    body('purchasePrice').optional().isNumeric().withMessage('Purchase price must be a number'),
+    body('purchaseDate').optional().isISO8601().withMessage('Invalid purchase date'),
+];
+
+const updateAssetValidation = [
+    param('id').isMongoId().withMessage('Invalid asset ID'),
+    body('assetTag').optional().trim().notEmpty().withMessage('Asset tag cannot be empty'),
+    body('name').optional().trim().notEmpty().withMessage('Name cannot be empty'),
+    body('status').optional().isIn(['available', 'in-use', 'maintenance', 'retired']).withMessage('Invalid status'),
+];
+
+const idValidation = [
+    param('id').isMongoId().withMessage('Invalid asset ID'),
+];
+
+// All routes require authentication
+router.use(authenticate);
+
+// Get all assets - accessible by all authenticated users
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     try {
         const assets = await assetService.getAssets();
@@ -13,8 +39,8 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     }
 });
 
-// Get asset by ID
-router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
+// Get asset by ID - accessible by all authenticated users
+router.get('/:id', idValidation, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const asset = await assetService.getAssetById(req.params.id);
         if (!asset) {
@@ -26,8 +52,8 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
     }
 });
 
-// Get asset depreciation
-router.get('/:id/depreciation', async (req: Request, res: Response, next: NextFunction) => {
+// Get asset depreciation - accessible by all authenticated users
+router.get('/:id/depreciation', idValidation, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const depreciation = await assetService.calculateDepreciation(req.params.id);
         if (!depreciation) {
@@ -39,8 +65,8 @@ router.get('/:id/depreciation', async (req: Request, res: Response, next: NextFu
     }
 });
 
-// Create asset
-router.post('/', async (req: Request, res: Response, next: NextFunction) => {
+// Create asset - requires admin or manager role
+router.post('/', authorize('admin', 'manager'), createAssetValidation, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const asset = await assetService.createAsset(req.body);
         res.status(201).json({ success: true, data: asset, error: null });
@@ -49,8 +75,8 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     }
 });
 
-// Update asset
-router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
+// Update asset - requires admin or manager role
+router.put('/:id', authorize('admin', 'manager'), updateAssetValidation, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const asset = await assetService.updateAsset(req.params.id, req.body);
         if (!asset) {
@@ -62,8 +88,8 @@ router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
     }
 });
 
-// Delete asset
-router.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
+// Delete asset - requires admin role only
+router.delete('/:id', authorize('admin'), idValidation, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const asset = await assetService.deleteAsset(req.params.id);
         if (!asset) {

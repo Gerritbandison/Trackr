@@ -3,22 +3,71 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import rateLimit from 'express-rate-limit';
+import swaggerUi from 'swagger-ui-express';
 import assetRoutes from './modules/assets/asset.routes';
+import authRoutes from './modules/auth/auth.routes';
+import userRoutes from './modules/users/user.routes';
+import licenseRoutes from './modules/licenses/license.routes';
+import departmentRoutes from './modules/departments/department.routes';
+import vendorRoutes from './modules/vendors/vendor.routes';
 import { errorHandler } from './core/middleware/error.middleware';
 import { auditMiddleware } from './core/middleware/audit.middleware';
+import logger from './core/utils/logger';
+import { swaggerSpec } from './core/config/swagger';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Rate limiting configuration
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // Limit each IP to 5 login requests per windowMs
+    message: 'Too many login attempts, please try again after 15 minutes',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again after 15 minutes',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// CORS configuration
+const corsOptions = {
+    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    credentials: true,
+    optionsSuccessStatus: 200
+};
+
 // Middleware
 app.use(helmet());
-app.use(cors());
-app.use(express.json());
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Apply rate limiting to API routes
+app.use('/api/', apiLimiter);
 
 // Audit Logging
 app.use(auditMiddleware);
+
+// API Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'Trackr ITAM API Docs'
+}));
+
+// Swagger JSON endpoint
+app.get('/api-docs.json', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(swaggerSpec);
+});
 
 // Health Check Endpoint
 app.get('/health', (req, res) => {
@@ -32,7 +81,12 @@ app.get('/health', (req, res) => {
 });
 
 // Routes
+app.use('/api/v1/auth', authLimiter, authRoutes);
+app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/assets', assetRoutes);
+app.use('/api/v1/licenses', licenseRoutes);
+app.use('/api/v1/departments', departmentRoutes);
+app.use('/api/v1/vendors', vendorRoutes);
 
 // Error Handling
 app.use(errorHandler);
@@ -44,32 +98,33 @@ const connectDB = async (retries = 5) => {
     for (let i = 0; i < retries; i++) {
         try {
             await mongoose.connect(MONGO_URI);
-            console.log('✅ Connected to MongoDB');
+            logger.info('✅ Connected to MongoDB');
             return;
         } catch (err) {
-            console.error(`❌ MongoDB connection attempt ${i + 1} failed:`, err);
+            logger.error(`❌ MongoDB connection attempt ${i + 1} failed: ${err instanceof Error ? err.message : err}`);
             if (i < retries - 1) {
-                console.log(`⏳ Retrying in 5 seconds...`);
+                logger.info('⏳ Retrying in 5 seconds...');
                 await new Promise(resolve => setTimeout(resolve, 5000));
             }
         }
     }
-    console.error('❌ Failed to connect to MongoDB after multiple attempts');
+    logger.error('❌ Failed to connect to MongoDB after multiple attempts');
     process.exit(1);
 };
 
 connectDB().then(() => {
     app.listen(PORT, () => {
-        console.log(`🚀 Server running on port ${PORT}`);
-        console.log(`🏥 Health check: http://localhost:${PORT}/health`);
+        logger.info(`🚀 Server running on port ${PORT}`);
+        logger.info(`🏥 Health check: http://localhost:${PORT}/health`);
+        logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
     });
 });
 
 // Graceful shutdown
 const gracefulShutdown = async () => {
-    console.log('\n🛑 Shutting down gracefully...');
+    logger.info('\n🛑 Shutting down gracefully...');
     await mongoose.connection.close();
-    console.log('✅ MongoDB connection closed');
+    logger.info('✅ MongoDB connection closed');
     process.exit(0);
 };
 
