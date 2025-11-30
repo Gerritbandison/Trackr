@@ -32,7 +32,7 @@ export const getLicenses = async (req: AuthRequest, res: Response): Promise<void
 
 export const getLicenseById = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const license = await licenseService.getLicenseById(req.params.id);
+        const license = await licenseService.getLicenseById(req.params.id!);
 
         if (!license) {
             res.status(404).json({
@@ -93,7 +93,7 @@ export const updateLicense = async (req: AuthRequest, res: Response): Promise<vo
             return;
         }
 
-        const license = await licenseService.updateLicense(req.params.id, req.body);
+        const license = await licenseService.updateLicense(req.params.id!, req.body);
 
         if (!license) {
             res.status(404).json({
@@ -119,7 +119,7 @@ export const updateLicense = async (req: AuthRequest, res: Response): Promise<vo
 
 export const deleteLicense = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const license = await licenseService.deleteLicense(req.params.id);
+        const license = await licenseService.deleteLicense(req.params.id!);
 
         if (!license) {
             res.status(404).json({
@@ -154,7 +154,7 @@ export const assignLicense = async (req: AuthRequest, res: Response): Promise<vo
             return;
         }
 
-        const license = await licenseService.assignLicense(req.params.id, userId);
+        const license = await licenseService.assignLicense(req.params.id!, userId);
 
         res.status(200).json({
             success: true,
@@ -182,7 +182,7 @@ export const unassignLicense = async (req: AuthRequest, res: Response): Promise<
             return;
         }
 
-        const license = await licenseService.unassignLicense(req.params.id, userId);
+        const license = await licenseService.unassignLicense(req.params.id!, userId);
 
         res.status(200).json({
             success: true,
@@ -217,7 +217,7 @@ export const getExpiringLicenses = async (req: AuthRequest, res: Response): Prom
     }
 };
 
-export const getComplianceReport = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getComplianceReport = async (_req: AuthRequest, res: Response): Promise<void> => {
     try {
         const report = await licenseService.getComplianceReport();
 
@@ -234,7 +234,7 @@ export const getComplianceReport = async (req: AuthRequest, res: Response): Prom
     }
 };
 
-export const getUtilizationStats = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getUtilizationStats = async (_req: AuthRequest, res: Response): Promise<void> => {
     try {
         const stats = await licenseService.getUtilizationStats();
 

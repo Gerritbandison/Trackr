@@ -30,7 +30,7 @@ const idValidation = [
 router.use(authenticate);
 
 // Get all assets - accessible by all authenticated users
-router.get('/', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/', async (_req: Request, res: Response, next: NextFunction) => {
     try {
         const assets = await assetService.getAssets();
         res.json({ success: true, data: assets, error: null });
@@ -40,11 +40,12 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 });
 
 // Get asset by ID - accessible by all authenticated users
-router.get('/:id', idValidation, async (req: Request, res: Response, next: NextFunction) => {
+router.get('/:id', idValidation, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const asset = await assetService.getAssetById(req.params.id);
+        const asset = await assetService.getAssetById(req.params.id!);
         if (!asset) {
-            return res.status(404).json({ success: false, data: null, error: 'Asset not found' });
+            res.status(404).json({ success: false, data: null, error: 'Asset not found' });
+            return;
         }
         res.json({ success: true, data: asset, error: null });
     } catch (error) {
@@ -53,11 +54,12 @@ router.get('/:id', idValidation, async (req: Request, res: Response, next: NextF
 });
 
 // Get asset depreciation - accessible by all authenticated users
-router.get('/:id/depreciation', idValidation, async (req: Request, res: Response, next: NextFunction) => {
+router.get('/:id/depreciation', idValidation, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const depreciation = await assetService.calculateDepreciation(req.params.id);
+        const depreciation = await assetService.calculateDepreciation(req.params.id!);
         if (!depreciation) {
-            return res.status(404).json({ success: false, data: null, error: 'Asset not found' });
+            res.status(404).json({ success: false, data: null, error: 'Asset not found' });
+            return;
         }
         res.json({ success: true, data: depreciation, error: null });
     } catch (error) {
@@ -76,11 +78,12 @@ router.post('/', authorize('admin', 'manager'), createAssetValidation, async (re
 });
 
 // Update asset - requires admin or manager role
-router.put('/:id', authorize('admin', 'manager'), updateAssetValidation, async (req: Request, res: Response, next: NextFunction) => {
+router.put('/:id', authorize('admin', 'manager'), updateAssetValidation, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const asset = await assetService.updateAsset(req.params.id, req.body);
+        const asset = await assetService.updateAsset(req.params.id!, req.body);
         if (!asset) {
-            return res.status(404).json({ success: false, data: null, error: 'Asset not found' });
+            res.status(404).json({ success: false, data: null, error: 'Asset not found' });
+            return;
         }
         res.json({ success: true, data: asset, error: null });
     } catch (error) {
@@ -89,11 +92,12 @@ router.put('/:id', authorize('admin', 'manager'), updateAssetValidation, async (
 });
 
 // Delete asset - requires admin role only
-router.delete('/:id', authorize('admin'), idValidation, async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/:id', authorize('admin'), idValidation, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const asset = await assetService.deleteAsset(req.params.id);
+        const asset = await assetService.deleteAsset(req.params.id!);
         if (!asset) {
-            return res.status(404).json({ success: false, data: null, error: 'Asset not found' });
+            res.status(404).json({ success: false, data: null, error: 'Asset not found' });
+            return;
         }
         res.json({ success: true, data: null, error: null });
     } catch (error) {

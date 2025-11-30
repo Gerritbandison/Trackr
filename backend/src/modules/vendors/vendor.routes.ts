@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import { body, param } from 'express-validator';
 import { validationResult } from 'express-validator';
-import Vendor, { IVendor } from './vendor.model';
+import Vendor from './vendor.model';
 import { authenticate, authorize, AuthRequest } from '../../core/middleware/auth.middleware';
 import mongoose from 'mongoose';
 
@@ -28,12 +28,12 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 // Get vendor by ID
 router.get('/:id', param('id').isMongoId(), async (req: AuthRequest, res: Response) => {
     try {
-        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id!)) {
             res.status(400).json({ success: false, message: 'Invalid vendor ID' });
             return;
         }
 
-        const vendor = await Vendor.findById(req.params.id);
+        const vendor = await Vendor.findById(req.params.id!);
         if (!vendor) {
             res.status(404).json({ success: false, message: 'Vendor not found' });
             return;
@@ -86,7 +86,7 @@ router.put('/:id',
                 return;
             }
 
-            const vendor = await Vendor.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+            const vendor = await Vendor.findByIdAndUpdate(req.params.id!, req.body, { new: true, runValidators: true });
             if (!vendor) {
                 res.status(404).json({ success: false, message: 'Vendor not found' });
                 return;
@@ -105,7 +105,7 @@ router.delete('/:id',
     param('id').isMongoId(),
     async (req: AuthRequest, res: Response) => {
         try {
-            const vendor = await Vendor.findByIdAndDelete(req.params.id);
+            const vendor = await Vendor.findByIdAndDelete(req.params.id!);
             if (!vendor) {
                 res.status(404).json({ success: false, message: 'Vendor not found' });
                 return;

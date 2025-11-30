@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import { body, param } from 'express-validator';
 import { validationResult } from 'express-validator';
-import Department, { IDepartment } from './department.model';
+import Department from './department.model';
 import { authenticate, authorize, AuthRequest } from '../../core/middleware/auth.middleware';
 import mongoose from 'mongoose';
 
@@ -27,12 +27,12 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 // Get department by ID
 router.get('/:id', param('id').isMongoId(), async (req: AuthRequest, res: Response) => {
     try {
-        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id!)) {
             res.status(400).json({ success: false, message: 'Invalid department ID' });
             return;
         }
 
-        const department = await Department.findById(req.params.id).populate('manager', 'name email department');
+        const department = await Department.findById(req.params.id!).populate('manager', 'name email department');
         if (!department) {
             res.status(404).json({ success: false, message: 'Department not found' });
             return;
@@ -85,7 +85,7 @@ router.put('/:id',
                 return;
             }
 
-            const department = await Department.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+            const department = await Department.findByIdAndUpdate(req.params.id!, req.body, { new: true, runValidators: true });
             if (!department) {
                 res.status(404).json({ success: false, message: 'Department not found' });
                 return;
@@ -104,7 +104,7 @@ router.delete('/:id',
     param('id').isMongoId(),
     async (req: AuthRequest, res: Response) => {
         try {
-            const department = await Department.findByIdAndUpdate(req.params.id, { isActive: false }, { new: true });
+            const department = await Department.findByIdAndUpdate(req.params.id!, { isActive: false }, { new: true });
             if (!department) {
                 res.status(404).json({ success: false, message: 'Department not found' });
                 return;

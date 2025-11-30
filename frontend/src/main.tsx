@@ -3,9 +3,14 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
+import * as Sentry from '@sentry/react';
 import App from './App';
 import { AuthProvider } from './contexts/AuthContext';
+import { initializeSentry } from './config/sentry';
 import './index.css';
+
+// Initialize Sentry (must be first)
+initializeSentry();
 
 // Create a client
 const queryClient = new QueryClient({
@@ -25,11 +30,12 @@ if (!rootElement) {
 
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
-    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <App />
-          <Toaster
+    <Sentry.ErrorBoundary fallback={<div>An error occurred. Please refresh the page.</div>}>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <App />
+            <Toaster
             position="top-right"
             toastOptions={{
               duration: 4000,
@@ -69,6 +75,7 @@ ReactDOM.createRoot(rootElement).render(
         </AuthProvider>
       </QueryClientProvider>
     </BrowserRouter>
+    </Sentry.ErrorBoundary>
   </React.StrictMode>
 );
 
