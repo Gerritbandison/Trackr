@@ -1,8 +1,11 @@
 # Multi-stage Dockerfile for Backend
 # Development stage with hot-reload
-FROM node:18-alpine AS development
+FROM node:20-alpine AS development
 
 WORKDIR /app
+
+# Install build dependencies for native modules (Python 3.12+ compatible)
+RUN apk add --no-cache python3 py3-pip make g++
 
 # Install dependencies first (better caching)
 COPY package*.json ./
@@ -18,9 +21,12 @@ EXPOSE 5000
 CMD ["npm", "run", "dev"]
 
 # Builder stage
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
+
+# Install build dependencies for native modules
+RUN apk add --no-cache python3 py3-pip make g++
 
 # Copy package files
 COPY package*.json ./
@@ -31,11 +37,11 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM node:18-alpine AS production
+FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Install wget for healthcheck
+# Install runtime dependencies only (no build tools needed)
 RUN apk add --no-cache wget
 
 # Copy package files and install production dependencies

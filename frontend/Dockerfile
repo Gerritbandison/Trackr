@@ -1,8 +1,11 @@
 # Multi-stage Dockerfile for Frontend
 # Development stage
-FROM node:18-alpine AS development
+FROM node:20-alpine AS development
 
 WORKDIR /app
+
+# Install build dependencies for native modules (Python 3.12+ compatible)
+RUN apk add --no-cache python3 py3-pip make g++
 
 # Install dependencies
 COPY package*.json ./
@@ -16,9 +19,12 @@ EXPOSE 5173
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 
 # Builder stage
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
+
+# Install build dependencies for native modules
+RUN apk add --no-cache python3 py3-pip make g++
 
 # Install dependencies
 COPY package*.json ./
