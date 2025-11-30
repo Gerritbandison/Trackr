@@ -30,7 +30,19 @@ export const getUsers = async (req: AuthRequest, res: Response): Promise<void> =
 
 export const getUserById = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const user = await userService.getUserById(req.params.id);
+        const requestedUserId = req.params.id as string;
+        const currentUser = req.user;
+
+        // Check if user is trying to access their own profile or is admin/manager
+        if (currentUser?.role === 'staff' && currentUser._id.toString() !== requestedUserId) {
+            res.status(403).json({
+                success: false,
+                message: 'Access denied. You can only view your own profile.'
+            });
+            return;
+        }
+
+        const user = await userService.getUserById(requestedUserId);
 
         if (!user) {
             res.status(404).json({
@@ -91,7 +103,26 @@ export const updateUser = async (req: AuthRequest, res: Response): Promise<void>
             return;
         }
 
-        const user = await userService.updateUser(req.params.id, req.body);
+        const requestedUserId = req.params.id as string;
+        const currentUser = req.user;
+
+        // Check if user is authorized (admin or updating own profile)
+        const isAdmin = currentUser?.role === 'admin';
+        const isOwnProfile = currentUser?._id.toString() === requestedUserId;
+
+        if (!isAdmin && !isOwnProfile) {
+            res.status(403).json({
+                success: false,
+                message: 'Access denied. You can only update your own profile.'
+            });
+            return;
+        }
+
+        // Remove email from update data (email should not be updatable)
+        const updateData = { ...req.body };
+        delete updateData.email;
+
+        const user = await userService.updateUser(requestedUserId, updateData);
 
         if (!user) {
             res.status(404).json({
@@ -117,7 +148,7 @@ export const updateUser = async (req: AuthRequest, res: Response): Promise<void>
 
 export const deleteUser = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const user = await userService.deleteUser(req.params.id);
+        const user = await userService.deleteUser(req.params.id as string);
 
         if (!user) {
             res.status(404).json({
@@ -143,7 +174,7 @@ export const deleteUser = async (req: AuthRequest, res: Response): Promise<void>
 
 export const reactivateUser = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const user = await userService.reactivateUser(req.params.id);
+        const user = await userService.reactivateUser(req.params.id as string);
 
         if (!user) {
             res.status(404).json({
@@ -169,7 +200,7 @@ export const reactivateUser = async (req: AuthRequest, res: Response): Promise<v
 
 export const getUsersByRole = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const users = await userService.getUsersByRole(req.params.role);
+        const users = await userService.getUsersByRole(req.params.role as string);
 
         res.status(200).json({
             success: true,
@@ -187,7 +218,7 @@ export const getUsersByRole = async (req: AuthRequest, res: Response): Promise<v
 
 export const getUsersByDepartment = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const users = await userService.getUsersByDepartment(req.params.department);
+        const users = await userService.getUsersByDepartment(req.params.department as string);
 
         res.status(200).json({
             success: true,

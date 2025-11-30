@@ -88,8 +88,8 @@ router.get('/:id', idValidation, getUserById);
 // Create user - admin only
 router.post('/', authorize('admin'), createUserValidation, createUser);
 
-// Update user - admin only (or users can update themselves)
-router.put('/:id', authorize('admin'), updateUserValidation, updateUser);
+// Update user - admin or self (authorization handled in controller)
+router.put('/:id', updateUserValidation, updateUser);
 
 // Delete user (deactivate) - admin only
 router.delete('/:id', authorize('admin'), idValidation, deleteUser);

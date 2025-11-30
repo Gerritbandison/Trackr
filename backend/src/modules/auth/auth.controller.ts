@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { User } from '../users/user.model';
 import { AuthRequest } from '../../core/middleware/auth.middleware';
 import { validationResult } from 'express-validator';
@@ -11,7 +11,7 @@ const generateToken = (userId: string, role: string): string => {
     return jwt.sign(
         { id: userId, role },
         JWT_SECRET,
-        { expiresIn: JWT_EXPIRE }
+        { expiresIn: JWT_EXPIRE } as SignOptions
     );
 };
 
