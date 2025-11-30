@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import rateLimit from 'express-rate-limit';
+import swaggerUi from 'swagger-ui-express';
 import assetRoutes from './modules/assets/asset.routes';
 import authRoutes from './modules/auth/auth.routes';
 import userRoutes from './modules/users/user.routes';
@@ -13,6 +14,7 @@ import vendorRoutes from './modules/vendors/vendor.routes';
 import { errorHandler } from './core/middleware/error.middleware';
 import { auditMiddleware } from './core/middleware/audit.middleware';
 import logger from './core/utils/logger';
+import { swaggerSpec } from './core/config/swagger';
 
 dotenv.config();
 
@@ -54,6 +56,18 @@ app.use('/api/', apiLimiter);
 
 // Audit Logging
 app.use(auditMiddleware);
+
+// API Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'Trackr ITAM API Docs'
+}));
+
+// Swagger JSON endpoint
+app.get('/api-docs.json', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(swaggerSpec);
+});
 
 // Health Check Endpoint
 app.get('/health', (req, res) => {
@@ -102,6 +116,7 @@ connectDB().then(() => {
     app.listen(PORT, () => {
         logger.info(`🚀 Server running on port ${PORT}`);
         logger.info(`🏥 Health check: http://localhost:${PORT}/health`);
+        logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
     });
 });
 
