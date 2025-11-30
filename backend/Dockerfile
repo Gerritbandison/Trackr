@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile for Backend
 # Development stage with hot-reload
-FROM node:18-alpine AS development
+FROM node:20-alpine AS development
 
 WORKDIR /app
 
@@ -18,20 +18,21 @@ EXPOSE 5000
 CMD ["npm", "run", "dev"]
 
 # Builder stage
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-RUN npm ci --only=production
+# Install ALL dependencies (including devDependencies) needed for build
+RUN npm ci
 
 # Copy source and build
 COPY . .
 RUN npm run build
 
 # Production stage
-FROM node:18-alpine AS production
+FROM node:20-alpine AS production
 
 WORKDIR /app
 
