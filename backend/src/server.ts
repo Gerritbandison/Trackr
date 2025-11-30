@@ -12,6 +12,7 @@ import departmentRoutes from './modules/departments/department.routes';
 import vendorRoutes from './modules/vendors/vendor.routes';
 import { errorHandler } from './core/middleware/error.middleware';
 import { auditMiddleware } from './core/middleware/audit.middleware';
+import logger from './core/utils/logger';
 
 dotenv.config();
 
@@ -83,32 +84,32 @@ const connectDB = async (retries = 5) => {
     for (let i = 0; i < retries; i++) {
         try {
             await mongoose.connect(MONGO_URI);
-            console.log('✅ Connected to MongoDB');
+            logger.info('✅ Connected to MongoDB');
             return;
         } catch (err) {
-            console.error(`❌ MongoDB connection attempt ${i + 1} failed:`, err);
+            logger.error(`❌ MongoDB connection attempt ${i + 1} failed: ${err instanceof Error ? err.message : err}`);
             if (i < retries - 1) {
-                console.log(`⏳ Retrying in 5 seconds...`);
+                logger.info('⏳ Retrying in 5 seconds...');
                 await new Promise(resolve => setTimeout(resolve, 5000));
             }
         }
     }
-    console.error('❌ Failed to connect to MongoDB after multiple attempts');
+    logger.error('❌ Failed to connect to MongoDB after multiple attempts');
     process.exit(1);
 };
 
 connectDB().then(() => {
     app.listen(PORT, () => {
-        console.log(`🚀 Server running on port ${PORT}`);
-        console.log(`🏥 Health check: http://localhost:${PORT}/health`);
+        logger.info(`🚀 Server running on port ${PORT}`);
+        logger.info(`🏥 Health check: http://localhost:${PORT}/health`);
     });
 });
 
 // Graceful shutdown
 const gracefulShutdown = async () => {
-    console.log('\n🛑 Shutting down gracefully...');
+    logger.info('\n🛑 Shutting down gracefully...');
     await mongoose.connection.close();
-    console.log('✅ MongoDB connection closed');
+    logger.info('✅ MongoDB connection closed');
     process.exit(0);
 };
 

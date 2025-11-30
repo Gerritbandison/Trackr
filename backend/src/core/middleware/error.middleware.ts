@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
+import logger from '../utils/logger';
 
 interface CustomError extends Error {
     statusCode?: number;
@@ -31,10 +32,13 @@ export const errorHandler = (err: CustomError, req: Request, res: Response, next
         message = `Invalid ${err.path}: ${err.value}`;
     }
 
-    // Log error for debugging (in development)
-    if (process.env.NODE_ENV === 'development') {
-        console.error('Error:', err);
-    }
+    // Log error
+    logger.error(`Error ${statusCode}: ${message}`, {
+        error: err.message,
+        stack: err.stack,
+        path: req.path,
+        method: req.method
+    });
 
     res.status(statusCode).json({
         success: false,
