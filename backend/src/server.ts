@@ -11,6 +11,7 @@ import userRoutes from './modules/users/user.routes';
 import licenseRoutes from './modules/licenses/license.routes';
 import departmentRoutes from './modules/departments/department.routes';
 import vendorRoutes from './modules/vendors/vendor.routes';
+import historyRoutes from './modules/history/history.routes';
 import { errorHandler } from './core/middleware/error.middleware';
 import { auditMiddleware } from './core/middleware/audit.middleware';
 import logger from './core/utils/logger';
@@ -94,6 +95,7 @@ app.use('/api/v1/assets', assetRoutes);
 app.use('/api/v1/licenses', licenseRoutes);
 app.use('/api/v1/departments', departmentRoutes);
 app.use('/api/v1/vendors', vendorRoutes);
+app.use('/api/v1/audit-logs', historyRoutes);
 
 // Sentry error handler (must be before other error handlers, after routes)
 app.use(sentryErrorHandler);
