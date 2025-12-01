@@ -1,4 +1,4 @@
-import HistoryLog, { IHistoryLog } from './history.model';
+import HistoryLog from './history.model';
 
 interface GetHistoryLogsQuery {
     limit?: number;
@@ -12,7 +12,7 @@ export const historyService = {
     /**
      * Get all history logs with optional filtering
      */
-    async getHistoryLogs(query: GetHistoryLogsQuery = {}): Promise<IHistoryLog[]> {
+    async getHistoryLogs(query: GetHistoryLogsQuery = {}): Promise<any[]> {
         const { limit = 100, sort = '-timestamp', resourceType, action, actorId } = query;
 
         const filter: any = {};
@@ -29,7 +29,7 @@ export const historyService = {
     /**
      * Get history logs for a specific resource
      */
-    async getResourceLogs(resourceType: string, resourceId: string): Promise<IHistoryLog[]> {
+    async getResourceLogs(resourceType: string, resourceId: string): Promise<any[]> {
         return await HistoryLog.find({
             resourceType: resourceType.charAt(0).toUpperCase() + resourceType.slice(1),
             resourceId
@@ -41,7 +41,7 @@ export const historyService = {
     /**
      * Get user activity logs
      */
-    async getUserActivity(userId: string, limit: number = 50): Promise<IHistoryLog[]> {
+    async getUserActivity(userId: string, limit: number = 50): Promise<any[]> {
         return await HistoryLog.find({ actorId: userId })
             .sort('-timestamp')
             .limit(limit)
@@ -81,7 +81,7 @@ export const historyService = {
     /**
      * Get a single audit log by ID
      */
-    async getById(id: string): Promise<IHistoryLog | null> {
+    async getById(id: string): Promise<any | null> {
         return await HistoryLog.findById(id).lean();
     }
 };

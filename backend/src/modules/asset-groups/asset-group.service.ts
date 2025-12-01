@@ -1,10 +1,11 @@
+import mongoose from 'mongoose';
 import { AssetGroup, IAssetGroup } from './asset-group.model';
 
 export const assetGroupService = {
     /**
      * Get all asset groups with optional filtering
      */
-    async getAssetGroups(query: any = {}): Promise<IAssetGroup[]> {
+    async getAssetGroups(query: any = {}): Promise<any[]> {
         const filter: any = {};
 
         if (query.category) {
@@ -25,7 +26,7 @@ export const assetGroupService = {
     /**
      * Get asset group by ID
      */
-    async getAssetGroupById(id: string): Promise<IAssetGroup | null> {
+    async getAssetGroupById(id: string): Promise<any | null> {
         return await AssetGroup.findById(id)
             .populate('createdBy', 'name email')
             .populate('assets', 'assetTag name status category')
@@ -44,7 +45,7 @@ export const assetGroupService = {
     /**
      * Update asset group
      */
-    async updateAssetGroup(id: string, data: Partial<IAssetGroup>): Promise<IAssetGroup | null> {
+    async updateAssetGroup(id: string, data: Partial<IAssetGroup>): Promise<any | null> {
         return await AssetGroup.findByIdAndUpdate(
             id,
             { $set: data },
@@ -55,14 +56,14 @@ export const assetGroupService = {
     /**
      * Delete asset group
      */
-    async deleteAssetGroup(id: string): Promise<IAssetGroup | null> {
+    async deleteAssetGroup(id: string): Promise<any | null> {
         return await AssetGroup.findByIdAndDelete(id).lean();
     },
 
     /**
      * Get low stock alerts
      */
-    async getLowStockAlerts(): Promise<IAssetGroup[]> {
+    async getLowStockAlerts(): Promise<any[]> {
         return await AssetGroup.find({
             $expr: { $lt: ['$currentStock', '$minStock'] }
         })
@@ -74,7 +75,7 @@ export const assetGroupService = {
     /**
      * Add assets to group
      */
-    async addAssets(groupId: string, assetIds: string[]): Promise<IAssetGroup | null> {
+    async addAssets(groupId: string, assetIds: string[]): Promise<any | null> {
         const group = await AssetGroup.findById(groupId);
         if (!group) return null;
 
@@ -93,7 +94,7 @@ export const assetGroupService = {
     /**
      * Remove assets from group
      */
-    async removeAssets(groupId: string, assetIds: string[]): Promise<IAssetGroup | null> {
+    async removeAssets(groupId: string, assetIds: string[]): Promise<any | null> {
         const group = await AssetGroup.findById(groupId);
         if (!group) return null;
 

@@ -16,7 +16,7 @@ export const getAll = async (req: Request, res: Response, next: NextFunction): P
 
 export const getById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const group = await assetGroupService.getAssetGroupById(req.params.id);
+        const group = await assetGroupService.getAssetGroupById(req.params.id!);
 
         if (!group) {
             res.status(404).json({
@@ -63,7 +63,7 @@ export const create = async (req: AuthRequest, res: Response, next: NextFunction
 
 export const update = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const group = await assetGroupService.updateAssetGroup(req.params.id, req.body);
+        const group = await assetGroupService.updateAssetGroup(req.params.id!, req.body);
 
         if (!group) {
             res.status(404).json({
@@ -84,7 +84,7 @@ export const update = async (req: Request, res: Response, next: NextFunction): P
 
 export const deleteGroup = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const group = await assetGroupService.deleteAssetGroup(req.params.id);
+        const group = await assetGroupService.deleteAssetGroup(req.params.id!);
 
         if (!group) {
             res.status(404).json({
@@ -128,7 +128,7 @@ export const addAssets = async (req: Request, res: Response, next: NextFunction)
             return;
         }
 
-        const group = await assetGroupService.addAssets(req.params.id, assetIds);
+        const group = await assetGroupService.addAssets(req.params.id!, assetIds);
 
         if (!group) {
             res.status(404).json({
@@ -159,7 +159,7 @@ export const removeAssets = async (req: Request, res: Response, next: NextFuncti
             return;
         }
 
-        const group = await assetGroupService.removeAssets(req.params.id, assetIds);
+        const group = await assetGroupService.removeAssets(req.params.id!, assetIds);
 
         if (!group) {
             res.status(404).json({

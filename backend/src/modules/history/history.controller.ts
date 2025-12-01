@@ -24,7 +24,7 @@ export const getAll = async (req: Request, res: Response, next: NextFunction): P
 
 export const getById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const log = await historyService.getById(req.params.id);
+        const log = await historyService.getById(req.params.id!);
 
         if (!log) {
             res.status(404).json({
@@ -47,7 +47,7 @@ export const getResourceLogs = async (req: Request, res: Response, next: NextFun
     try {
         const { targetType, targetId } = req.params;
 
-        const logs = await historyService.getResourceLogs(targetType, targetId);
+        const logs = await historyService.getResourceLogs(targetType!, targetId!);
 
         res.json({
             success: true,
@@ -63,7 +63,7 @@ export const getUserActivity = async (req: Request, res: Response, next: NextFun
         const { userId } = req.params;
         const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
 
-        const logs = await historyService.getUserActivity(userId, limit);
+        const logs = await historyService.getUserActivity(userId!, limit);
 
         res.json({
             success: true,
@@ -74,7 +74,7 @@ export const getUserActivity = async (req: Request, res: Response, next: NextFun
     }
 };
 
-export const getStats = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const getStats = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const stats = await historyService.getStats();
 
