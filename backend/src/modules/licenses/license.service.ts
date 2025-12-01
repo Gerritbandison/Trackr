@@ -1,5 +1,6 @@
 import License, { ILicense } from './license.model';
 import mongoose from 'mongoose';
+import { PaginationOptions, PaginatedResult } from '../../core/utils/pagination';
 
 interface LicenseFilter {
     vendor?: string;
@@ -11,22 +12,49 @@ interface LicenseFilter {
 }
 
 export class LicenseService {
-    // Get all licenses
-    async getLicenses(filter: LicenseFilter = {}): Promise<ILicense[]> {
+    // Get all licenses with pagination
+    async getLicenses(filter: LicenseFilter = {}, options: PaginationOptions = {}): Promise<PaginatedResult<any>> {
         try {
-            return await License.find(filter).populate('assignedTo', 'name email');
+            const { page = 1, limit = 50, sort = '-createdAt' } = options;
+            const skip = (page - 1) * limit;
+
+            const [data, total] = await Promise.all([
+                License.find(filter)
+                    .select('-__v')
+                    .populate('assignedTo', 'name email')
+                    .sort(sort)
+                    .skip(skip)
+                    .limit(limit)
+                    .lean(),
+                License.countDocuments(filter)
+            ]);
+
+            const pages = Math.ceil(total / limit);
+
+            return {
+                data,
+                total,
+                page,
+                limit,
+                pages,
+                hasNext: page < pages,
+                hasPrev: page > 1
+            };
         } catch (error) {
             throw new Error(`Failed to fetch licenses: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
     // Get license by ID
-    async getLicenseById(id: string): Promise<ILicense | null> {
+    async getLicenseById(id: string): Promise<any> {
         try {
             if (!mongoose.Types.ObjectId.isValid(id)) {
                 throw new Error('Invalid license ID format');
             }
-            return await License.findById(id).populate('assignedTo', 'name email department');
+            return await License.findById(id)
+                .select('-__v')
+                .populate('assignedTo', 'name email department')
+                .lean();
         } catch (error) {
             throw new Error(`Failed to fetch license: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
@@ -139,7 +167,7 @@ export class LicenseService {
     }
 
     // Get expiring licenses (within specified days)
-    async getExpiringLicenses(days: number = 30): Promise<ILicense[]> {
+    async getExpiringLicenses(days: number = 30): Promise<any[]> {
         try {
             const now = new Date();
             const futureDate = new Date();
@@ -151,7 +179,10 @@ export class LicenseService {
                     $lte: futureDate
                 },
                 status: { $ne: 'cancelled' }
-            }).populate('assignedTo', 'name email');
+            })
+                .select('-__v')
+                .populate('assignedTo', 'name email')
+                .lean();
         } catch (error) {
             throw new Error(`Failed to fetch expiring licenses: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
@@ -190,7 +221,9 @@ export class LicenseService {
         utilizationRate: number;
     }> {
         try {
-            const licenses = await License.find({ status: 'active' });
+            const licenses = await License.find({ status: 'active' })
+                .select('totalSeats usedSeats')
+                .lean();
 
             const totalSeats = licenses.reduce((sum, license) => sum + license.totalSeats, 0);
             const usedSeats = licenses.reduce((sum, license) => sum + license.usedSeats, 0);

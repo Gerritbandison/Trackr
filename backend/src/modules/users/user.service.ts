@@ -1,5 +1,6 @@
 import { User, IUser } from './user.model';
 import mongoose from 'mongoose';
+import { PaginationOptions, PaginatedResult } from '../../core/utils/pagination';
 
 interface UserFilter {
     role?: string;
@@ -9,31 +10,58 @@ interface UserFilter {
 }
 
 export class UserService {
-    // Get all users
-    async getUsers(filter: UserFilter = {}): Promise<IUser[]> {
+    // Get all users with pagination
+    async getUsers(filter: UserFilter = {}, options: PaginationOptions = {}): Promise<PaginatedResult<any>> {
         try {
-            return await User.find(filter).select('-password -twoFactorSecret');
+            const { page = 1, limit = 50, sort = '-createdAt' } = options;
+            const skip = (page - 1) * limit;
+
+            const [data, total] = await Promise.all([
+                User.find(filter)
+                    .select('-password -twoFactorSecret -__v')
+                    .sort(sort)
+                    .skip(skip)
+                    .limit(limit)
+                    .lean(),
+                User.countDocuments(filter)
+            ]);
+
+            const pages = Math.ceil(total / limit);
+
+            return {
+                data,
+                total,
+                page,
+                limit,
+                pages,
+                hasNext: page < pages,
+                hasPrev: page > 1
+            };
         } catch (error) {
             throw new Error(`Failed to fetch users: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
     // Get user by ID
-    async getUserById(id: string): Promise<IUser | null> {
+    async getUserById(id: string): Promise<any> {
         try {
             if (!mongoose.Types.ObjectId.isValid(id)) {
                 throw new Error('Invalid user ID format');
             }
-            return await User.findById(id).select('-password -twoFactorSecret');
+            return await User.findById(id)
+                .select('-password -twoFactorSecret -__v')
+                .lean();
         } catch (error) {
             throw new Error(`Failed to fetch user: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
     // Get user by email
-    async getUserByEmail(email: string): Promise<IUser | null> {
+    async getUserByEmail(email: string): Promise<any> {
         try {
-            return await User.findOne({ email }).select('-password -twoFactorSecret');
+            return await User.findOne({ email })
+                .select('-password -twoFactorSecret -__v')
+                .lean();
         } catch (error) {
             throw new Error(`Failed to fetch user: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
@@ -131,18 +159,22 @@ export class UserService {
     }
 
     // Get users by role
-    async getUsersByRole(role: string): Promise<IUser[]> {
+    async getUsersByRole(role: string): Promise<any[]> {
         try {
-            return await User.find({ role }).select('-password -twoFactorSecret');
+            return await User.find({ role })
+                .select('-password -twoFactorSecret -__v')
+                .lean();
         } catch (error) {
             throw new Error(`Failed to fetch users by role: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
     // Get users by department
-    async getUsersByDepartment(department: string): Promise<IUser[]> {
+    async getUsersByDepartment(department: string): Promise<any[]> {
         try {
-            return await User.find({ department }).select('-password -twoFactorSecret');
+            return await User.find({ department })
+                .select('-password -twoFactorSecret -__v')
+                .lean();
         } catch (error) {
             throw new Error(`Failed to fetch users by department: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }

@@ -1,5 +1,6 @@
 import Asset, { IAsset } from './asset.model';
 import mongoose from 'mongoose';
+import { PaginationOptions, PaginatedResult } from '../../core/utils/pagination';
 
 interface AssetFilter {
     status?: string;
@@ -23,34 +24,68 @@ export class AssetService {
         }
     }
 
-    // Get all assets
-    async getAssets(filter: AssetFilter = {}): Promise<IAsset[]> {
+    // Get all assets with pagination and field selection
+    async getAssets(
+        filter: AssetFilter = {},
+        options: PaginationOptions = {}
+    ): Promise<PaginatedResult<any>> {
         try {
-            return await Asset.find(filter);
+            const { page = 1, limit = 50, sort = '-createdAt' } = options;
+            const skip = (page - 1) * limit;
+
+            // Build query
+            const query = Asset.find(filter);
+
+            // Execute count and data queries in parallel
+            const [data, total] = await Promise.all([
+                query
+                    .select('-__v') // Exclude version key
+                    .sort(sort)
+                    .skip(skip)
+                    .limit(limit)
+                    .lean(), // Use lean() for better performance on read operations
+                Asset.countDocuments(filter)
+            ]);
+
+            const pages = Math.ceil(total / limit);
+
+            return {
+                data,
+                total,
+                page,
+                limit,
+                pages,
+                hasNext: page < pages,
+                hasPrev: page > 1
+            };
         } catch (error) {
             throw new Error(`Failed to fetch assets: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
-    // Get asset by ID
-    async getAssetById(id: string): Promise<IAsset | null> {
+    // Get asset by ID with field selection
+    async getAssetById(id: string): Promise<any> {
         try {
             if (!mongoose.Types.ObjectId.isValid(id)) {
                 throw new Error('Invalid asset ID format');
             }
-            return await Asset.findById(id);
+            return await Asset.findById(id)
+                .select('-__v')
+                .lean();
         } catch (error) {
             throw new Error(`Failed to fetch asset: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
     // Update asset
-    async updateAsset(id: string, data: Partial<IAsset>): Promise<IAsset | null> {
+    async updateAsset(id: string, data: Partial<IAsset>): Promise<any> {
         try {
             if (!mongoose.Types.ObjectId.isValid(id)) {
                 throw new Error('Invalid asset ID format');
             }
-            return await Asset.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+            return await Asset.findByIdAndUpdate(id, data, { new: true, runValidators: true })
+                .select('-__v')
+                .lean();
         } catch (error) {
             if (error instanceof mongoose.Error.ValidationError) {
                 throw new Error(`Validation failed: ${error.message}`);
@@ -60,12 +95,12 @@ export class AssetService {
     }
 
     // Delete asset
-    async deleteAsset(id: string): Promise<IAsset | null> {
+    async deleteAsset(id: string): Promise<any> {
         try {
             if (!mongoose.Types.ObjectId.isValid(id)) {
                 throw new Error('Invalid asset ID format');
             }
-            return await Asset.findByIdAndDelete(id);
+            return await Asset.findByIdAndDelete(id).lean();
         } catch (error) {
             throw new Error(`Failed to delete asset: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
