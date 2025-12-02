@@ -1,6 +1,7 @@
 import Asset, { IAsset } from './asset.model';
 import mongoose from 'mongoose';
 import { PaginationOptions, PaginatedResult } from '../../core/utils/pagination';
+import { convertToCSV, parseCSV, validateImportData } from '../../core/utils/csv';
 
 interface AssetFilter {
     status?: string;
@@ -297,6 +298,146 @@ export class AssetService {
                 .lean();
         } catch (error) {
             throw new Error(`Failed to get expired warranties: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    }
+
+    // Export assets to CSV
+    async exportToCSV(filter: AssetFilter = {}): Promise<string> {
+        try {
+            const assets = await Asset.find(filter)
+                .select('-__v -_id')
+                .populate('assignedTo', 'name email')
+                .lean();
+
+            // Flatten nested objects for CSV
+            const flattenedAssets = assets.map(asset => ({
+                name: asset.name,
+                serialNumber: asset.serialNumber,
+                assetTag: asset.assetTag,
+                manufacturer: asset.manufacturer || '',
+                modelNumber: asset.modelNumber || '',
+                category: asset.category,
+                status: asset.status,
+                location: asset.location || '',
+                condition: asset.condition || '',
+                purchaseDate: asset.purchaseDate ? new Date(asset.purchaseDate).toISOString().split('T')[0] : '',
+                purchasePrice: asset.purchasePrice || 0,
+                depreciationType: asset.depreciationType,
+                usefulLife: asset.usefulLife,
+                salvageValue: asset.salvageValue || 0,
+                assignedTo: asset.assignedTo ? (asset.assignedTo as any).name : '',
+                assignedToEmail: asset.assignedTo ? (asset.assignedTo as any).email : '',
+                assignedDate: asset.assignedDate ? new Date(asset.assignedDate).toISOString().split('T')[0] : '',
+                warrantyProvider: asset.warranty?.provider || '',
+                warrantyStartDate: asset.warranty?.startDate ? new Date(asset.warranty.startDate).toISOString().split('T')[0] : '',
+                warrantyEndDate: asset.warranty?.endDate ? new Date(asset.warranty.endDate).toISOString().split('T')[0] : '',
+                warrantyNumber: asset.warranty?.warrantyNumber || '',
+                createdAt: new Date(asset.createdAt).toISOString(),
+                updatedAt: new Date(asset.updatedAt).toISOString()
+            }));
+
+            return convertToCSV(flattenedAssets);
+        } catch (error) {
+            throw new Error(`Failed to export assets: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    }
+
+    // Bulk import assets from CSV
+    async bulkImport(csvData: string): Promise<{
+        success: number;
+        failed: number;
+        errors: string[];
+        imported: any[];
+    }> {
+        try {
+            // Parse CSV
+            const data = parseCSV(csvData);
+
+            // Validate required fields
+            const requiredFields = ['name', 'serialNumber', 'assetTag', 'category', 'purchaseDate', 'purchasePrice'];
+            const validation = validateImportData(data, requiredFields);
+
+            if (!validation.valid) {
+                return {
+                    success: 0,
+                    failed: data.length,
+                    errors: validation.errors,
+                    imported: []
+                };
+            }
+
+            const results = {
+                success: 0,
+                failed: 0,
+                errors: [] as string[],
+                imported: [] as any[]
+            };
+
+            // Process each row
+            for (let i = 0; i < data.length; i++) {
+                const row = data[i];
+                try {
+                    // Check for duplicate serial number or asset tag
+                    const existing = await Asset.findOne({
+                        $or: [
+                            { serialNumber: row.serialNumber },
+                            { assetTag: row.assetTag }
+                        ]
+                    });
+
+                    if (existing) {
+                        results.failed++;
+                        results.errors.push(
+                            `Row ${i + 2}: Asset with serial number '${row.serialNumber}' or asset tag '${row.assetTag}' already exists`
+                        );
+                        continue;
+                    }
+
+                    // Parse warranty data if present
+                    const warranty = (row.warrantyProvider && row.warrantyStartDate && row.warrantyEndDate) ? {
+                        provider: row.warrantyProvider,
+                        startDate: new Date(row.warrantyStartDate),
+                        endDate: new Date(row.warrantyEndDate),
+                        warrantyNumber: row.warrantyNumber || undefined,
+                        supportPhone: row.supportPhone || undefined
+                    } : undefined;
+
+                    // Create asset
+                    const asset = new Asset({
+                        name: row.name,
+                        description: row.description || undefined,
+                        serialNumber: row.serialNumber,
+                        assetTag: row.assetTag,
+                        manufacturer: row.manufacturer || undefined,
+                        modelNumber: row.modelNumber || undefined,
+                        category: row.category,
+                        status: row.status || 'In Stock',
+                        location: row.location || undefined,
+                        condition: row.condition || 'Good',
+                        conditionNotes: row.conditionNotes || undefined,
+                        purchaseDate: new Date(row.purchaseDate),
+                        purchasePrice: parseFloat(row.purchasePrice),
+                        depreciationType: row.depreciationType || 'Straight Line',
+                        usefulLife: row.usefulLife ? parseInt(row.usefulLife) : 3,
+                        salvageValue: row.salvageValue ? parseFloat(row.salvageValue) : 0,
+                        warranty,
+                        assignmentHistory: []
+                    });
+
+                    const saved = await asset.save();
+                    results.success++;
+                    results.imported.push(saved);
+                } catch (error) {
+                    results.failed++;
+                    results.errors.push(
+                        `Row ${i + 2}: ${error instanceof Error ? error.message : 'Unknown error'}`
+                    );
+                }
+            }
+
+            return results;
+        } catch (error) {
+            throw new Error(`Failed to import assets: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 }

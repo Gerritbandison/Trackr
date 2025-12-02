@@ -205,4 +205,43 @@ router.get('/user/:userId', async (req: AuthRequest, res: Response, next: NextFu
     }
 });
 
+// Export assets to CSV - accessible by all authenticated users
+router.get('/export/csv', async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const filter = {
+            ...(req.query.status && { status: req.query.status as string }),
+            ...(req.query.category && { category: req.query.category as string }),
+            ...(req.query.assignedTo && { assignedTo: req.query.assignedTo as string })
+        };
+
+        const csv = await assetService.exportToCSV(filter);
+
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename=assets-${new Date().toISOString().split('T')[0]}.csv`);
+        res.send(csv);
+    } catch (error) {
+        next(error);
+    }
+});
+
+// Bulk import assets from CSV - requires admin or manager role
+router.post('/import/csv', authorize('admin', 'manager'), async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        if (!req.body.csvData) {
+            ApiResponse.badRequest(res, 'CSV data is required');
+            return;
+        }
+
+        const result = await assetService.bulkImport(req.body.csvData);
+
+        if (result.failed > 0) {
+            ApiResponse.success(res, result, `Imported ${result.success} assets with ${result.failed} errors`);
+        } else {
+            ApiResponse.success(res, result, `Successfully imported ${result.success} assets`);
+        }
+    } catch (error) {
+        next(error);
+    }
+});
+
 export default router;

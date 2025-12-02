@@ -12,7 +12,9 @@ import {
     getComplianceReport,
     getUtilizationStats,
     getLicenseAssignmentHistory,
-    getUserLicenses
+    getUserLicenses,
+    exportToCSV,
+    bulkImport
 } from './license.controller';
 import { authenticate, authorize } from '../../core/middleware/auth.middleware';
 
@@ -82,5 +84,11 @@ router.get('/:id/assignment-history', idValidation, getLicenseAssignmentHistory)
 
 // Get licenses for a specific user - accessible by all authenticated users
 router.get('/user/:userId', [param('userId').isMongoId().withMessage('Invalid user ID')], getUserLicenses);
+
+// Export licenses to CSV - accessible by all authenticated users
+router.get('/export/csv', exportToCSV);
+
+// Bulk import licenses from CSV - requires admin or manager role
+router.post('/import/csv', authorize('admin', 'manager'), bulkImport);
 
 export default router;

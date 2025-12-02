@@ -1,6 +1,7 @@
 import License, { ILicense } from './license.model';
 import mongoose from 'mongoose';
 import { PaginationOptions, PaginatedResult } from '../../core/utils/pagination';
+import { convertToCSV, parseCSV, validateImportData } from '../../core/utils/csv';
 
 interface LicenseFilter {
     vendor?: string;
@@ -302,6 +303,138 @@ export class LicenseService {
                 .lean();
         } catch (error) {
             throw new Error(`Failed to get user licenses: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    }
+
+    // Export licenses to CSV
+    async exportToCSV(filter: LicenseFilter = {}): Promise<string> {
+        try {
+            const licenses = await License.find(filter)
+                .select('-__v -_id')
+                .populate('assignedTo', 'name email')
+                .lean();
+
+            // Flatten for CSV
+            const flattenedLicenses = licenses.map(license => ({
+                name: license.name,
+                vendor: license.vendor,
+                type: license.type,
+                category: license.category,
+                licenseKey: license.licenseKey || '',
+                status: license.status,
+                totalSeats: license.totalSeats,
+                usedSeats: license.usedSeats,
+                availableSeats: license.totalSeats - license.usedSeats,
+                purchaseDate: license.purchaseDate ? new Date(license.purchaseDate).toISOString().split('T')[0] : '',
+                purchaseCost: license.purchaseCost || 0,
+                expirationDate: license.expirationDate ? new Date(license.expirationDate).toISOString().split('T')[0] : '',
+                renewalDate: license.renewalDate ? new Date(license.renewalDate).toISOString().split('T')[0] : '',
+                annualCost: license.annualCost || 0,
+                autoRenew: license.autoRenew || false,
+                complianceStatus: license.complianceStatus,
+                assignedUsers: license.assignedTo ? (license.assignedTo as any[]).map(u => u.name).join('; ') : '',
+                createdAt: new Date(license.createdAt).toISOString(),
+                updatedAt: new Date(license.updatedAt).toISOString()
+            }));
+
+            return convertToCSV(flattenedLicenses);
+        } catch (error) {
+            throw new Error(`Failed to export licenses: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    }
+
+    // Bulk import licenses from CSV
+    async bulkImport(csvData: string): Promise<{
+        success: number;
+        failed: number;
+        errors: string[];
+        imported: any[];
+    }> {
+        try {
+            // Parse CSV
+            const data = parseCSV(csvData);
+
+            // Validate required fields
+            const requiredFields = ['name', 'vendor', 'type', 'category', 'totalSeats', 'purchaseDate', 'purchaseCost'];
+            const validation = validateImportData(data, requiredFields);
+
+            if (!validation.valid) {
+                return {
+                    success: 0,
+                    failed: data.length,
+                    errors: validation.errors,
+                    imported: []
+                };
+            }
+
+            const results = {
+                success: 0,
+                failed: 0,
+                errors: [] as string[],
+                imported: [] as any[]
+            };
+
+            // Process each row
+            for (let i = 0; i < data.length; i++) {
+                const row = data[i];
+                try {
+                    // Check for duplicate license key if provided
+                    if (row.licenseKey) {
+                        const existing = await License.findOne({ licenseKey: row.licenseKey });
+                        if (existing) {
+                            results.failed++;
+                            results.errors.push(
+                                `Row ${i + 2}: License with key '${row.licenseKey}' already exists`
+                            );
+                            continue;
+                        }
+                    }
+
+                    // Validate type
+                    if (!['perpetual', 'subscription', 'trial'].includes(row.type)) {
+                        results.failed++;
+                        results.errors.push(
+                            `Row ${i + 2}: Invalid license type '${row.type}'. Must be perpetual, subscription, or trial`
+                        );
+                        continue;
+                    }
+
+                    // Create license
+                    const license = new License({
+                        name: row.name,
+                        vendor: row.vendor,
+                        type: row.type,
+                        category: row.category,
+                        licenseKey: row.licenseKey || undefined,
+                        description: row.description || undefined,
+                        status: row.status || 'active',
+                        totalSeats: parseInt(row.totalSeats),
+                        usedSeats: row.usedSeats ? parseInt(row.usedSeats) : 0,
+                        purchaseDate: new Date(row.purchaseDate),
+                        purchaseCost: parseFloat(row.purchaseCost),
+                        expirationDate: row.expirationDate ? new Date(row.expirationDate) : undefined,
+                        renewalDate: row.renewalDate ? new Date(row.renewalDate) : undefined,
+                        annualCost: row.annualCost ? parseFloat(row.annualCost) : undefined,
+                        autoRenew: row.autoRenew === 'true' || row.autoRenew === '1',
+                        complianceStatus: row.complianceStatus || 'compliant',
+                        assignedTo: [],
+                        assignmentHistory: []
+                    });
+
+                    const saved = await license.save();
+                    results.success++;
+                    results.imported.push(saved);
+                } catch (error) {
+                    results.failed++;
+                    results.errors.push(
+                        `Row ${i + 2}: ${error instanceof Error ? error.message : 'Unknown error'}`
+                    );
+                }
+            }
+
+            return results;
+        } catch (error) {
+            throw new Error(`Failed to import licenses: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 }

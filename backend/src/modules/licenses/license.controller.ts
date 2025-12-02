@@ -180,3 +180,43 @@ export const getUserLicenses = async (req: AuthRequest, res: Response): Promise<
         ApiResponse.error(res, 'Error fetching user licenses', error instanceof Error ? error.message : 'Unknown error');
     }
 };
+
+export const exportToCSV = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const { vendor, type, status, category, complianceStatus } = req.query;
+
+        const filter: Record<string, string> = {};
+        if (vendor) filter.vendor = vendor as string;
+        if (type) filter.type = type as string;
+        if (status) filter.status = status as string;
+        if (category) filter.category = category as string;
+        if (complianceStatus) filter.complianceStatus = complianceStatus as string;
+
+        const csv = await licenseService.exportToCSV(filter);
+
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename=licenses-${new Date().toISOString().split('T')[0]}.csv`);
+        res.send(csv);
+    } catch (error) {
+        ApiResponse.error(res, 'Error exporting licenses', error instanceof Error ? error.message : 'Unknown error');
+    }
+};
+
+export const bulkImport = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        if (!req.body.csvData) {
+            ApiResponse.badRequest(res, 'CSV data is required');
+            return;
+        }
+
+        const result = await licenseService.bulkImport(req.body.csvData);
+
+        if (result.failed > 0) {
+            ApiResponse.success(res, result, `Imported ${result.success} licenses with ${result.failed} errors`);
+        } else {
+            ApiResponse.success(res, result, `Successfully imported ${result.success} licenses`);
+        }
+    } catch (error) {
+        ApiResponse.error(res, 'Error importing licenses', error instanceof Error ? error.message : 'Unknown error', 400);
+    }
+};
