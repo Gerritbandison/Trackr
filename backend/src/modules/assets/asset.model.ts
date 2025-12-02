@@ -8,6 +8,13 @@ export interface IAssignmentHistory {
     notes?: string;
 }
 
+export interface ILocationHistory {
+    locationId: mongoose.Types.ObjectId;
+    movedDate: Date;
+    movedBy: mongoose.Types.ObjectId;
+    reason?: string;
+}
+
 export interface IAsset extends Document {
     name: string;
     description?: string;
@@ -25,7 +32,8 @@ export interface IAsset extends Document {
     assignmentHistory: IAssignmentHistory[];
     status: 'Active' | 'Retired' | 'Repair' | 'In Stock';
     category: string;
-    location?: string;
+    location?: mongoose.Types.ObjectId; // Current location
+    locationHistory: ILocationHistory[];
     condition?: 'Excellent' | 'Good' | 'Fair' | 'Poor' | 'Damaged';
     conditionNotes?: string;
     warranty?: {
@@ -45,6 +53,13 @@ const AssignmentHistorySchema = new Schema({
     returnedDate: { type: Date },
     assignedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     notes: { type: String }
+}, { _id: false });
+
+const LocationHistorySchema = new Schema({
+    locationId: { type: Schema.Types.ObjectId, ref: 'Location', required: true },
+    movedDate: { type: Date, required: true },
+    movedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    reason: { type: String }
 }, { _id: false });
 
 const AssetSchema: Schema = new Schema({
@@ -72,7 +87,8 @@ const AssetSchema: Schema = new Schema({
         default: 'In Stock'
     },
     category: { type: String, required: true },
-    location: { type: String },
+    location: { type: Schema.Types.ObjectId, ref: 'Location' },
+    locationHistory: [LocationHistorySchema],
     condition: {
         type: String,
         enum: ['Excellent', 'Good', 'Fair', 'Poor', 'Damaged'],
@@ -93,6 +109,7 @@ AssetSchema.index({ status: 1, category: 1 }); // Filter by status and category
 AssetSchema.index({ status: 1, createdAt: -1 }); // Sort active/retired assets by date
 AssetSchema.index({ category: 1, createdAt: -1 }); // Get recent assets in a category
 AssetSchema.index({ assignedTo: 1 }); // Query assets by assigned user
+AssetSchema.index({ location: 1 }); // Query assets by location
 
 // Helper method to check if asset is under warranty
 AssetSchema.methods.isUnderWarranty = function(): boolean {

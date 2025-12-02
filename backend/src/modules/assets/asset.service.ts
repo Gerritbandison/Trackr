@@ -440,6 +440,89 @@ export class AssetService {
             throw new Error(`Failed to import assets: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
+
+    // Transfer asset to new location
+    async transferAsset(assetId: string, locationId: string, movedBy: string, reason?: string): Promise<any> {
+        try {
+            if (!mongoose.Types.ObjectId.isValid(assetId) || !mongoose.Types.ObjectId.isValid(locationId) || !mongoose.Types.ObjectId.isValid(movedBy)) {
+                throw new Error('Invalid asset, location, or movedBy ID format');
+            }
+
+            const asset = await Asset.findById(assetId);
+            if (!asset) {
+                throw new Error('Asset not found');
+            }
+
+            // Verify location exists
+            const Location = mongoose.model('Location');
+            const location = await Location.findById(locationId);
+            if (!location) {
+                throw new Error('Location not found');
+            }
+
+            // Check if already at this location
+            if (asset.location && asset.location.equals(new mongoose.Types.ObjectId(locationId))) {
+                throw new Error('Asset is already at this location');
+            }
+
+            const now = new Date();
+
+            // Add to location history
+            asset.locationHistory.push({
+                locationId: new mongoose.Types.ObjectId(locationId),
+                movedDate: now,
+                movedBy: new mongoose.Types.ObjectId(movedBy),
+                reason
+            });
+
+            // Update current location
+            asset.location = new mongoose.Types.ObjectId(locationId);
+
+            return await asset.save();
+        } catch (error) {
+            throw new Error(`Failed to transfer asset: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    }
+
+    // Get asset location history
+    async getAssetLocationHistory(assetId: string): Promise<any> {
+        try {
+            if (!mongoose.Types.ObjectId.isValid(assetId)) {
+                throw new Error('Invalid asset ID format');
+            }
+
+            const asset = await Asset.findById(assetId)
+                .select('name serialNumber assetTag location locationHistory')
+                .populate('location', 'name code type')
+                .populate('locationHistory.locationId', 'name code type')
+                .populate('locationHistory.movedBy', 'name email')
+                .lean();
+
+            if (!asset) {
+                throw new Error('Asset not found');
+            }
+
+            return asset;
+        } catch (error) {
+            throw new Error(`Failed to get location history: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    }
+
+    // Get assets by location
+    async getAssetsByLocation(locationId: string): Promise<any[]> {
+        try {
+            if (!mongoose.Types.ObjectId.isValid(locationId)) {
+                throw new Error('Invalid location ID format');
+            }
+
+            return await Asset.find({ location: locationId })
+                .select('-__v')
+                .populate('assignedTo', 'name email')
+                .lean();
+        } catch (error) {
+            throw new Error(`Failed to get assets by location: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    }
 }
 
 export const assetService = new AssetService();

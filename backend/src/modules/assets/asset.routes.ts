@@ -244,4 +244,46 @@ router.post('/import/csv', authorize('admin', 'manager'), async (req: AuthReques
     }
 });
 
+// Transfer asset to new location - requires admin or manager role
+router.post('/:id/transfer', authorize('admin', 'manager'), idValidation, async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const { locationId, reason } = req.body;
+
+        if (!locationId) {
+            ApiResponse.badRequest(res, 'Location ID is required');
+            return;
+        }
+
+        if (!req.user?.id) {
+            ApiResponse.unauthorized(res, 'Authentication required');
+            return;
+        }
+
+        const asset = await assetService.transferAsset(req.params.id!, locationId, req.user.id, reason);
+        ApiResponse.success(res, asset, 'Asset transferred successfully');
+    } catch (error) {
+        next(error);
+    }
+});
+
+// Get asset location history - accessible by all authenticated users
+router.get('/:id/location-history', idValidation, async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const history = await assetService.getAssetLocationHistory(req.params.id!);
+        ApiResponse.success(res, history);
+    } catch (error) {
+        next(error);
+    }
+});
+
+// Get assets by location - accessible by all authenticated users
+router.get('/location/:locationId', async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const assets = await assetService.getAssetsByLocation(req.params.locationId!);
+        ApiResponse.success(res, assets);
+    } catch (error) {
+        next(error);
+    }
+});
+
 export default router;
