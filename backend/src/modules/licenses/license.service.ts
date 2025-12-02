@@ -107,11 +107,11 @@ export class LicenseService {
         }
     }
 
-    // Assign license to user
-    async assignLicense(licenseId: string, userId: string): Promise<ILicense | null> {
+    // Assign license to user with history tracking
+    async assignLicense(licenseId: string, userId: string, assignedBy: string, reason?: string): Promise<ILicense | null> {
         try {
-            if (!mongoose.Types.ObjectId.isValid(licenseId) || !mongoose.Types.ObjectId.isValid(userId)) {
-                throw new Error('Invalid license or user ID format');
+            if (!mongoose.Types.ObjectId.isValid(licenseId) || !mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(assignedBy)) {
+                throw new Error('Invalid license, user, or assignedBy ID format');
             }
 
             const license = await License.findById(licenseId);
@@ -129,8 +129,19 @@ export class LicenseService {
                 throw new Error('User is already assigned to this license');
             }
 
+            const now = new Date();
+
+            // Add to current assignments
             license.assignedTo.push(userObjectId);
             license.usedSeats += 1;
+
+            // Add to assignment history
+            license.assignmentHistory.push({
+                userId: userObjectId,
+                assignedDate: now,
+                assignedBy: new mongoose.Types.ObjectId(assignedBy),
+                reason
+            });
 
             return await license.save();
         } catch (error) {
@@ -138,8 +149,8 @@ export class LicenseService {
         }
     }
 
-    // Unassign license from user
-    async unassignLicense(licenseId: string, userId: string): Promise<ILicense | null> {
+    // Unassign license from user with history tracking
+    async unassignLicense(licenseId: string, userId: string, reason?: string): Promise<ILicense | null> {
         try {
             if (!mongoose.Types.ObjectId.isValid(licenseId) || !mongoose.Types.ObjectId.isValid(userId)) {
                 throw new Error('Invalid license or user ID format');
@@ -157,6 +168,21 @@ export class LicenseService {
                 throw new Error('User is not assigned to this license');
             }
 
+            const now = new Date();
+
+            // Find the current assignment in history and mark it as unassigned
+            const currentHistory = license.assignmentHistory.find(
+                h => h.userId.equals(userObjectId) && !h.unassignedDate
+            );
+
+            if (currentHistory) {
+                currentHistory.unassignedDate = now;
+                if (reason) {
+                    currentHistory.reason = (currentHistory.reason ? currentHistory.reason + '; ' : '') + `Unassigned: ${reason}`;
+                }
+            }
+
+            // Remove from current assignments
             license.assignedTo.splice(userIndex, 1);
             license.usedSeats = Math.max(0, license.usedSeats - 1);
 
@@ -238,6 +264,44 @@ export class LicenseService {
             };
         } catch (error) {
             throw new Error(`Failed to calculate utilization stats: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    }
+
+    // Get assignment history for a license
+    async getLicenseAssignmentHistory(licenseId: string): Promise<any> {
+        try {
+            if (!mongoose.Types.ObjectId.isValid(licenseId)) {
+                throw new Error('Invalid license ID format');
+            }
+
+            const license = await License.findById(licenseId)
+                .select('assignmentHistory name vendor licenseKey')
+                .populate('assignmentHistory.userId', 'name email')
+                .populate('assignmentHistory.assignedBy', 'name email')
+                .lean();
+
+            if (!license) {
+                throw new Error('License not found');
+            }
+
+            return license;
+        } catch (error) {
+            throw new Error(`Failed to get assignment history: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    }
+
+    // Get all licenses assigned to a specific user
+    async getUserLicenses(userId: string): Promise<any[]> {
+        try {
+            if (!mongoose.Types.ObjectId.isValid(userId)) {
+                throw new Error('Invalid user ID format');
+            }
+
+            return await License.find({ assignedTo: userId })
+                .select('-__v')
+                .lean();
+        } catch (error) {
+            throw new Error(`Failed to get user licenses: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 }

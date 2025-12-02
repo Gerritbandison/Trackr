@@ -1,7 +1,7 @@
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router, Response, NextFunction } from 'express';
 import { body, param } from 'express-validator';
 import { assetService } from './asset.service';
-import { authenticate, authorize } from '../../core/middleware/auth.middleware';
+import { authenticate, authorize, AuthRequest } from '../../core/middleware/auth.middleware';
 import { ApiResponse } from '../../core/utils/response';
 import { parsePaginationParams } from '../../core/utils/pagination';
 
@@ -32,7 +32,7 @@ const idValidation = [
 router.use(authenticate);
 
 // Get all assets with pagination - accessible by all authenticated users
-router.get('/', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/', async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
         const { page, limit, sort } = parsePaginationParams(req.query);
         const filter = {
@@ -56,7 +56,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 });
 
 // Get asset by ID - accessible by all authenticated users
-router.get('/:id', idValidation, async (req: Request, res: Response, next: NextFunction) => {
+router.get('/:id', idValidation, async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
         const asset = await assetService.getAssetById(req.params.id!);
         if (!asset) {
@@ -71,7 +71,7 @@ router.get('/:id', idValidation, async (req: Request, res: Response, next: NextF
 });
 
 // Get asset depreciation - accessible by all authenticated users
-router.get('/:id/depreciation', idValidation, async (req: Request, res: Response, next: NextFunction) => {
+router.get('/:id/depreciation', idValidation, async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
         const depreciation = await assetService.calculateDepreciation(req.params.id!);
         if (!depreciation) {
@@ -86,7 +86,7 @@ router.get('/:id/depreciation', idValidation, async (req: Request, res: Response
 });
 
 // Create asset - requires admin or manager role
-router.post('/', authorize('admin', 'manager'), createAssetValidation, async (req: Request, res: Response, next: NextFunction) => {
+router.post('/', authorize('admin', 'manager'), createAssetValidation, async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
         const asset = await assetService.createAsset(req.body);
         ApiResponse.created(res, asset, 'Asset created successfully');
@@ -96,7 +96,7 @@ router.post('/', authorize('admin', 'manager'), createAssetValidation, async (re
 });
 
 // Update asset - requires admin or manager role
-router.put('/:id', authorize('admin', 'manager'), updateAssetValidation, async (req: Request, res: Response, next: NextFunction) => {
+router.put('/:id', authorize('admin', 'manager'), updateAssetValidation, async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
         const asset = await assetService.updateAsset(req.params.id!, req.body);
         if (!asset) {
@@ -111,7 +111,7 @@ router.put('/:id', authorize('admin', 'manager'), updateAssetValidation, async (
 });
 
 // Delete asset - requires admin role only
-router.delete('/:id', authorize('admin'), idValidation, async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/:id', authorize('admin'), idValidation, async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
         const asset = await assetService.deleteAsset(req.params.id!);
         if (!asset) {
@@ -120,6 +120,86 @@ router.delete('/:id', authorize('admin'), idValidation, async (req: Request, res
         }
 
         ApiResponse.deleted(res, 'Asset deleted successfully');
+    } catch (error) {
+        next(error);
+    }
+});
+
+// Assign asset to user - requires admin or manager role
+router.post('/:id/assign', authorize('admin', 'manager'), idValidation, async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const { userId, notes } = req.body;
+
+        if (!userId) {
+            ApiResponse.badRequest(res, 'User ID is required');
+            return;
+        }
+
+        if (!req.user?.id) {
+            ApiResponse.unauthorized(res, 'Authentication required');
+            return;
+        }
+
+        const asset = await assetService.assignAsset(req.params.id!, userId, req.user.id, notes);
+        ApiResponse.success(res, asset, 'Asset assigned successfully');
+    } catch (error) {
+        next(error);
+    }
+});
+
+// Return asset from user - requires admin or manager role
+router.post('/:id/return', authorize('admin', 'manager'), idValidation, async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const { notes } = req.body;
+
+        if (!req.user?.id) {
+            ApiResponse.unauthorized(res, 'Authentication required');
+            return;
+        }
+
+        const asset = await assetService.returnAsset(req.params.id!, req.user.id, notes);
+        ApiResponse.success(res, asset, 'Asset returned successfully');
+    } catch (error) {
+        next(error);
+    }
+});
+
+// Get asset assignment history - accessible by all authenticated users
+router.get('/:id/assignment-history', idValidation, async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const history = await assetService.getAssetAssignmentHistory(req.params.id!);
+        ApiResponse.success(res, history);
+    } catch (error) {
+        next(error);
+    }
+});
+
+// Get expiring warranties - accessible by all authenticated users
+router.get('/warranties/expiring', async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const days = req.query.days ? parseInt(req.query.days as string) : 30;
+        const assets = await assetService.getExpiringWarranties(days);
+        ApiResponse.success(res, assets);
+    } catch (error) {
+        next(error);
+    }
+});
+
+// Get expired warranties - accessible by all authenticated users
+router.get('/warranties/expired', async (_req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const assets = await assetService.getExpiredWarranties();
+        ApiResponse.success(res, assets);
+    } catch (error) {
+        next(error);
+    }
+});
+
+// Get assets for a specific user - accessible by all authenticated users
+router.get('/user/:userId', async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const assets = await assetService.getUserAssets(req.params.userId!);
+        ApiResponse.success(res, assets);
     } catch (error) {
         next(error);
     }

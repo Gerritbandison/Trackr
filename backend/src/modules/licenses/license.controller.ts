@@ -99,14 +99,19 @@ export const deleteLicense = async (req: AuthRequest, res: Response): Promise<vo
 
 export const assignLicense = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const { userId } = req.body;
+        const { userId, reason } = req.body;
 
         if (!userId) {
             ApiResponse.badRequest(res, 'User ID is required');
             return;
         }
 
-        const license = await licenseService.assignLicense(req.params.id!, userId);
+        if (!req.user?.id) {
+            ApiResponse.unauthorized(res, 'Authentication required');
+            return;
+        }
+
+        const license = await licenseService.assignLicense(req.params.id!, userId, req.user.id, reason);
         ApiResponse.success(res, license, 'License assigned successfully');
     } catch (error) {
         ApiResponse.error(res, 'Error assigning license', error instanceof Error ? error.message : 'Unknown error', 400);
@@ -115,14 +120,14 @@ export const assignLicense = async (req: AuthRequest, res: Response): Promise<vo
 
 export const unassignLicense = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const { userId } = req.body;
+        const { userId, reason } = req.body;
 
         if (!userId) {
             ApiResponse.badRequest(res, 'User ID is required');
             return;
         }
 
-        const license = await licenseService.unassignLicense(req.params.id!, userId);
+        const license = await licenseService.unassignLicense(req.params.id!, userId, reason);
         ApiResponse.success(res, license, 'License unassigned successfully');
     } catch (error) {
         ApiResponse.error(res, 'Error unassigning license', error instanceof Error ? error.message : 'Unknown error', 400);
@@ -155,5 +160,23 @@ export const getUtilizationStats = async (_req: AuthRequest, res: Response): Pro
         ApiResponse.success(res, stats);
     } catch (error) {
         ApiResponse.error(res, 'Error calculating utilization stats', error instanceof Error ? error.message : 'Unknown error');
+    }
+};
+
+export const getLicenseAssignmentHistory = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const history = await licenseService.getLicenseAssignmentHistory(req.params.id!);
+        ApiResponse.success(res, history);
+    } catch (error) {
+        ApiResponse.error(res, 'Error fetching assignment history', error instanceof Error ? error.message : 'Unknown error');
+    }
+};
+
+export const getUserLicenses = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const licenses = await licenseService.getUserLicenses(req.params.userId!);
+        ApiResponse.success(res, licenses);
+    } catch (error) {
+        ApiResponse.error(res, 'Error fetching user licenses', error instanceof Error ? error.message : 'Unknown error');
     }
 };

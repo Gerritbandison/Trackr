@@ -10,7 +10,9 @@ import {
     unassignLicense,
     getExpiringLicenses,
     getComplianceReport,
-    getUtilizationStats
+    getUtilizationStats,
+    getLicenseAssignmentHistory,
+    getUserLicenses
 } from './license.controller';
 import { authenticate, authorize } from '../../core/middleware/auth.middleware';
 
@@ -74,5 +76,11 @@ router.post('/:id/assign', authorize('admin', 'manager'), idValidation, assignLi
 
 // Unassign license from user - requires admin or manager role
 router.post('/:id/unassign', authorize('admin', 'manager'), idValidation, unassignLicense);
+
+// Get license assignment history - accessible by all authenticated users
+router.get('/:id/assignment-history', idValidation, getLicenseAssignmentHistory);
+
+// Get licenses for a specific user - accessible by all authenticated users
+router.get('/user/:userId', [param('userId').isMongoId().withMessage('Invalid user ID')], getUserLicenses);
 
 export default router;

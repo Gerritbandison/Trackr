@@ -1,5 +1,13 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
+export interface ILicenseAssignmentHistory {
+    userId: mongoose.Types.ObjectId;
+    assignedDate: Date;
+    unassignedDate?: Date;
+    assignedBy: mongoose.Types.ObjectId;
+    reason?: string;
+}
+
 export interface ILicense extends Document {
     name: string;
     vendor: string;
@@ -16,12 +24,21 @@ export interface ILicense extends Document {
     annualCost?: number;
     status: 'active' | 'expiring' | 'expired' | 'cancelled';
     assignedTo: mongoose.Types.ObjectId[];
+    assignmentHistory: ILicenseAssignmentHistory[];
     notes?: string;
     autoRenew: boolean;
     complianceStatus: 'compliant' | 'at-risk' | 'non-compliant';
     createdAt: Date;
     updatedAt: Date;
 }
+
+const LicenseAssignmentHistorySchema = new Schema({
+    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    assignedDate: { type: Date, required: true },
+    unassignedDate: { type: Date },
+    assignedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    reason: { type: String }
+}, { _id: false });
 
 const licenseSchema = new Schema<ILicense>(
     {
@@ -93,6 +110,7 @@ const licenseSchema = new Schema<ILicense>(
             type: Schema.Types.ObjectId,
             ref: 'User'
         }],
+        assignmentHistory: [LicenseAssignmentHistorySchema],
         notes: {
             type: String,
             trim: true
