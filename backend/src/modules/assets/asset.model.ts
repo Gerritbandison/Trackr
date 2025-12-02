@@ -42,4 +42,9 @@ const AssetSchema: Schema = new Schema({
     location: { type: String },
 }, { timestamps: true });
 
+// Compound indexes for common query patterns
+AssetSchema.index({ status: 1, category: 1 }); // Filter by status and category
+AssetSchema.index({ status: 1, createdAt: -1 }); // Sort active/retired assets by date
+AssetSchema.index({ category: 1, createdAt: -1 }); // Get recent assets in a category
+
 export default mongoose.model<IAsset>('Asset', AssetSchema);

@@ -149,4 +149,10 @@ licenseSchema.pre('save', function(next) {
     next();
 });
 
+// Compound indexes for common query patterns
+licenseSchema.index({ status: 1, expirationDate: 1 }); // Find expiring/active licenses
+licenseSchema.index({ vendor: 1, type: 1, status: 1 }); // Filter by vendor, type, and status
+licenseSchema.index({ complianceStatus: 1 }); // Query by compliance status
+licenseSchema.index({ status: 1, createdAt: -1 }); // Sort licenses by date within status
+
 export default mongoose.model<ILicense>('License', licenseSchema);

@@ -98,4 +98,9 @@ userSchema.methods.toJSON = function () {
     return obj;
 };
 
+// Compound indexes for common query patterns
+userSchema.index({ role: 1, isActive: 1 }); // Get active users by role
+userSchema.index({ department: 1, isActive: 1 }); // Get active users by department
+userSchema.index({ isActive: 1, createdAt: -1 }); // Sort users by creation date
+
 export const User = mongoose.model<IUser>('User', userSchema);
