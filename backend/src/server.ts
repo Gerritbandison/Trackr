@@ -133,10 +133,11 @@ const connectDB = async (retries = 5) => {
 };
 
 connectDB().then(() => {
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
         logger.info(`🚀 Server running on port ${PORT}`);
         logger.info(`🏥 Health check: http://localhost:${PORT}/health`);
         logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
+        logger.info(`📱 Network access enabled - accessible from other devices`);
     });
 });
 

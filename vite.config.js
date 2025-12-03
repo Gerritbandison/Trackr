@@ -16,6 +16,7 @@ export default defineConfig({
     }),
   ],
   server: {
+    host: '0.0.0.0', // Listen on all network interfaces (allows mobile access)
     port: 5173,
     strictPort: false,
     proxy: {
