@@ -43,8 +43,34 @@ export interface IAsset extends Document {
         warrantyNumber?: string;
         supportPhone?: string;
     };
+
+    // Microsoft Intune Integration Fields
+    intuneDeviceId?: string; // Unique Intune device ID
+    managementAgent?: 'intune' | 'configmgr' | 'easmdm' | 'manual'; // Device management source
+    enrollmentDate?: Date; // Intune enrollment date
+    lastSyncDate?: Date; // Last sync from Intune
+    complianceState?: 'compliant' | 'noncompliant' | 'inGracePeriod' | 'unknown'; // Compliance status
+    operatingSystem?: string; // e.g., "Windows 11", "iOS 17.2", "Android 14"
+    osVersion?: string; // e.g., "10.0.22621.2506"
+    lastCheckIn?: Date; // Last Intune check-in timestamp
+
+    // Device Hardware Details
+    imei?: string; // Mobile device IMEI
+    meid?: string; // Mobile device MEID
+    wifiMacAddress?: string; // WiFi MAC address
+    ethernetMacAddress?: string; // Ethernet MAC address
+    storageTotal?: number; // Total storage in GB
+    storageFree?: number; // Free storage in GB
+    memoryTotal?: number; // Total memory/RAM in GB
+
+    // Azure AD / Entra ID Fields
+    azureAdDeviceId?: string; // Azure AD device object ID
+    isEntraJoined?: boolean; // Azure AD joined status
+    isEntraRegistered?: boolean; // Azure AD registered status
+
     createdAt: Date;
     updatedAt: Date;
+    isUnderWarranty(): boolean;
 }
 
 const AssignmentHistorySchema = new Schema({
@@ -101,7 +127,38 @@ const AssetSchema: Schema = new Schema({
         endDate: { type: Date },
         warrantyNumber: { type: String },
         supportPhone: { type: String }
-    }
+    },
+
+    // Microsoft Intune Integration Fields
+    intuneDeviceId: { type: String, sparse: true },
+    managementAgent: {
+        type: String,
+        enum: ['intune', 'configmgr', 'easmdm', 'manual'],
+        default: 'manual'
+    },
+    enrollmentDate: { type: Date },
+    lastSyncDate: { type: Date },
+    complianceState: {
+        type: String,
+        enum: ['compliant', 'noncompliant', 'inGracePeriod', 'unknown']
+    },
+    operatingSystem: { type: String },
+    osVersion: { type: String },
+    lastCheckIn: { type: Date },
+
+    // Device Hardware Details
+    imei: { type: String },
+    meid: { type: String },
+    wifiMacAddress: { type: String },
+    ethernetMacAddress: { type: String },
+    storageTotal: { type: Number },
+    storageFree: { type: Number },
+    memoryTotal: { type: Number },
+
+    // Azure AD / Entra ID Fields
+    azureAdDeviceId: { type: String, sparse: true },
+    isEntraJoined: { type: Boolean, default: false },
+    isEntraRegistered: { type: Boolean, default: false }
 }, { timestamps: true });
 
 // Compound indexes for common query patterns
@@ -110,6 +167,12 @@ AssetSchema.index({ status: 1, createdAt: -1 }); // Sort active/retired assets b
 AssetSchema.index({ category: 1, createdAt: -1 }); // Get recent assets in a category
 AssetSchema.index({ assignedTo: 1 }); // Query assets by assigned user
 AssetSchema.index({ location: 1 }); // Query assets by location
+
+// Intune and Azure AD indexes
+AssetSchema.index({ intuneDeviceId: 1 }, { sparse: true }); // Query by Intune device ID
+AssetSchema.index({ azureAdDeviceId: 1 }, { sparse: true }); // Query by Azure AD device ID
+AssetSchema.index({ managementAgent: 1, complianceState: 1 }); // Filter by management source and compliance
+AssetSchema.index({ complianceState: 1, lastCheckIn: -1 }); // Monitor compliance status
 
 // Helper method to check if asset is under warranty
 AssetSchema.methods.isUnderWarranty = function(): boolean {
