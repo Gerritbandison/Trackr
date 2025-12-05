@@ -28,7 +28,7 @@ import {
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = parseInt(process.env.PORT || '5000', 10);
 
 // Initialize Sentry (must be first, before any middleware)
 initializeSentry(app);
