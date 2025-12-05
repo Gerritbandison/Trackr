@@ -2,6 +2,8 @@ import { Response } from 'express';
 import { licenseService } from './license.service';
 import { AuthRequest } from '../../core/middleware/auth.middleware';
 import { validationResult } from 'express-validator';
+import { ApiResponse } from '../../core/utils/response';
+import { parsePaginationParams } from '../../core/utils/pagination';
 
 export const getLicenses = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
@@ -14,19 +16,18 @@ export const getLicenses = async (req: AuthRequest, res: Response): Promise<void
         if (category) filter.category = category as string;
         if (complianceStatus) filter.complianceStatus = complianceStatus as string;
 
-        const licenses = await licenseService.getLicenses(filter);
+        const { page, limit, sort } = parsePaginationParams(req.query);
+        const result = await licenseService.getLicenses(filter, { page, limit, sort });
 
-        res.status(200).json({
-            success: true,
-            data: licenses,
-            count: licenses.length
-        });
+        ApiResponse.paginated(
+            res,
+            result.data,
+            result.total,
+            result.page,
+            result.limit
+        );
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error fetching licenses',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
+        ApiResponse.error(res, 'Error fetching licenses', error instanceof Error ? error.message : 'Unknown error');
     }
 };
 
@@ -35,23 +36,13 @@ export const getLicenseById = async (req: AuthRequest, res: Response): Promise<v
         const license = await licenseService.getLicenseById(req.params.id!);
 
         if (!license) {
-            res.status(404).json({
-                success: false,
-                message: 'License not found'
-            });
+            ApiResponse.notFound(res, 'License not found');
             return;
         }
 
-        res.status(200).json({
-            success: true,
-            data: license
-        });
+        ApiResponse.success(res, license);
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error fetching license',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
+        ApiResponse.error(res, 'Error fetching license', error instanceof Error ? error.message : 'Unknown error');
     }
 };
 
@@ -59,26 +50,14 @@ export const createLicense = async (req: AuthRequest, res: Response): Promise<vo
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            res.status(400).json({
-                success: false,
-                errors: errors.array()
-            });
+            ApiResponse.badRequest(res, 'Validation failed', errors.array());
             return;
         }
 
         const license = await licenseService.createLicense(req.body);
-
-        res.status(201).json({
-            success: true,
-            message: 'License created successfully',
-            data: license
-        });
+        ApiResponse.created(res, license, 'License created successfully');
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: 'Error creating license',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
+        ApiResponse.error(res, 'Error creating license', error instanceof Error ? error.message : 'Unknown error', 400);
     }
 };
 
@@ -86,34 +65,20 @@ export const updateLicense = async (req: AuthRequest, res: Response): Promise<vo
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            res.status(400).json({
-                success: false,
-                errors: errors.array()
-            });
+            ApiResponse.badRequest(res, 'Validation failed', errors.array());
             return;
         }
 
         const license = await licenseService.updateLicense(req.params.id!, req.body);
 
         if (!license) {
-            res.status(404).json({
-                success: false,
-                message: 'License not found'
-            });
+            ApiResponse.notFound(res, 'License not found');
             return;
         }
 
-        res.status(200).json({
-            success: true,
-            message: 'License updated successfully',
-            data: license
-        });
+        ApiResponse.success(res, license, 'License updated successfully');
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: 'Error updating license',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
+        ApiResponse.error(res, 'Error updating license', error instanceof Error ? error.message : 'Unknown error', 400);
     }
 };
 
@@ -122,79 +87,50 @@ export const deleteLicense = async (req: AuthRequest, res: Response): Promise<vo
         const license = await licenseService.deleteLicense(req.params.id!);
 
         if (!license) {
-            res.status(404).json({
-                success: false,
-                message: 'License not found'
-            });
+            ApiResponse.notFound(res, 'License not found');
             return;
         }
 
-        res.status(200).json({
-            success: true,
-            message: 'License deleted successfully'
-        });
+        ApiResponse.deleted(res, 'License deleted successfully');
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error deleting license',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
+        ApiResponse.error(res, 'Error deleting license', error instanceof Error ? error.message : 'Unknown error');
     }
 };
 
 export const assignLicense = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const { userId } = req.body;
+        const { userId, reason } = req.body;
 
         if (!userId) {
-            res.status(400).json({
-                success: false,
-                message: 'User ID is required'
-            });
+            ApiResponse.badRequest(res, 'User ID is required');
             return;
         }
 
-        const license = await licenseService.assignLicense(req.params.id!, userId);
+        if (!req.user?.id) {
+            ApiResponse.unauthorized(res, 'Authentication required');
+            return;
+        }
 
-        res.status(200).json({
-            success: true,
-            message: 'License assigned successfully',
-            data: license
-        });
+        const license = await licenseService.assignLicense(req.params.id!, userId, req.user.id, reason);
+        ApiResponse.success(res, license, 'License assigned successfully');
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: 'Error assigning license',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
+        ApiResponse.error(res, 'Error assigning license', error instanceof Error ? error.message : 'Unknown error', 400);
     }
 };
 
 export const unassignLicense = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const { userId } = req.body;
+        const { userId, reason } = req.body;
 
         if (!userId) {
-            res.status(400).json({
-                success: false,
-                message: 'User ID is required'
-            });
+            ApiResponse.badRequest(res, 'User ID is required');
             return;
         }
 
-        const license = await licenseService.unassignLicense(req.params.id!, userId);
-
-        res.status(200).json({
-            success: true,
-            message: 'License unassigned successfully',
-            data: license
-        });
+        const license = await licenseService.unassignLicense(req.params.id!, userId, reason);
+        ApiResponse.success(res, license, 'License unassigned successfully');
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: 'Error unassigning license',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
+        ApiResponse.error(res, 'Error unassigning license', error instanceof Error ? error.message : 'Unknown error', 400);
     }
 };
 
@@ -203,50 +139,84 @@ export const getExpiringLicenses = async (req: AuthRequest, res: Response): Prom
         const days = req.query.days ? parseInt(req.query.days as string) : 30;
         const licenses = await licenseService.getExpiringLicenses(days);
 
-        res.status(200).json({
-            success: true,
-            data: licenses,
-            count: licenses.length
-        });
+        ApiResponse.success(res, licenses);
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error fetching expiring licenses',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
+        ApiResponse.error(res, 'Error fetching expiring licenses', error instanceof Error ? error.message : 'Unknown error');
     }
 };
 
 export const getComplianceReport = async (_req: AuthRequest, res: Response): Promise<void> => {
     try {
         const report = await licenseService.getComplianceReport();
-
-        res.status(200).json({
-            success: true,
-            data: report
-        });
+        ApiResponse.success(res, report);
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error generating compliance report',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
+        ApiResponse.error(res, 'Error generating compliance report', error instanceof Error ? error.message : 'Unknown error');
     }
 };
 
 export const getUtilizationStats = async (_req: AuthRequest, res: Response): Promise<void> => {
     try {
         const stats = await licenseService.getUtilizationStats();
-
-        res.status(200).json({
-            success: true,
-            data: stats
-        });
+        ApiResponse.success(res, stats);
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Error calculating utilization stats',
-            error: error instanceof Error ? error.message : 'Unknown error'
-        });
+        ApiResponse.error(res, 'Error calculating utilization stats', error instanceof Error ? error.message : 'Unknown error');
+    }
+};
+
+export const getLicenseAssignmentHistory = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const history = await licenseService.getLicenseAssignmentHistory(req.params.id!);
+        ApiResponse.success(res, history);
+    } catch (error) {
+        ApiResponse.error(res, 'Error fetching assignment history', error instanceof Error ? error.message : 'Unknown error');
+    }
+};
+
+export const getUserLicenses = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const licenses = await licenseService.getUserLicenses(req.params.userId!);
+        ApiResponse.success(res, licenses);
+    } catch (error) {
+        ApiResponse.error(res, 'Error fetching user licenses', error instanceof Error ? error.message : 'Unknown error');
+    }
+};
+
+export const exportToCSV = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const { vendor, type, status, category, complianceStatus } = req.query;
+
+        const filter: Record<string, string> = {};
+        if (vendor) filter.vendor = vendor as string;
+        if (type) filter.type = type as string;
+        if (status) filter.status = status as string;
+        if (category) filter.category = category as string;
+        if (complianceStatus) filter.complianceStatus = complianceStatus as string;
+
+        const csv = await licenseService.exportToCSV(filter);
+
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename=licenses-${new Date().toISOString().split('T')[0]}.csv`);
+        res.send(csv);
+    } catch (error) {
+        ApiResponse.error(res, 'Error exporting licenses', error instanceof Error ? error.message : 'Unknown error');
+    }
+};
+
+export const bulkImport = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        if (!req.body.csvData) {
+            ApiResponse.badRequest(res, 'CSV data is required');
+            return;
+        }
+
+        const result = await licenseService.bulkImport(req.body.csvData);
+
+        if (result.failed > 0) {
+            ApiResponse.success(res, result, `Imported ${result.success} licenses with ${result.failed} errors`);
+        } else {
+            ApiResponse.success(res, result, `Successfully imported ${result.success} licenses`);
+        }
+    } catch (error) {
+        ApiResponse.error(res, 'Error importing licenses', error instanceof Error ? error.message : 'Unknown error', 400);
     }
 };

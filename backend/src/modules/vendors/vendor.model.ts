@@ -63,4 +63,8 @@ const vendorSchema = new Schema<IVendor>(
     }
 );
 
+// Compound indexes for common query patterns
+vendorSchema.index({ status: 1, category: 1 }); // Filter by status and category
+vendorSchema.index({ status: 1, createdAt: -1 }); // Sort vendors by date within status
+
 export default mongoose.model<IVendor>('Vendor', vendorSchema);

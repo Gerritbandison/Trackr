@@ -22,5 +22,9 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "@types/json2csv": "^5.0.7",
+    "json2csv": "^6.0.0-alpha.2"
   }
 }

@@ -50,4 +50,7 @@ const departmentSchema = new Schema<IDepartment>(
     }
 );
 
+// Compound indexes for common query patterns
+departmentSchema.index({ isActive: 1, createdAt: -1 }); // Get active departments sorted by date
+
 export default mongoose.model<IDepartment>('Department', departmentSchema);

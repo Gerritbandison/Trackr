@@ -3,6 +3,8 @@ import { body, param } from 'express-validator';
 import { validationResult } from 'express-validator';
 import Vendor from './vendor.model';
 import { authenticate, authorize, AuthRequest } from '../../core/middleware/auth.middleware';
+import { ApiResponse } from '../../core/utils/response';
+import { parsePaginationParams } from '../../core/utils/pagination';
 import mongoose from 'mongoose';
 
 const router = Router();
@@ -18,10 +20,22 @@ router.get('/', async (req: AuthRequest, res: Response) => {
         if (status) filter.status = status as string;
         if (category) filter.category = category as string;
 
-        const vendors = await Vendor.find(filter);
-        res.json({ success: true, data: vendors, count: vendors.length });
+        const { page, limit, sort } = parsePaginationParams(req.query);
+        const skip = (page! - 1) * limit!;
+
+        const [data, total] = await Promise.all([
+            Vendor.find(filter)
+                .select('-__v')
+                .sort(sort)
+                .skip(skip)
+                .limit(limit!)
+                .lean(),
+            Vendor.countDocuments(filter)
+        ]);
+
+        return ApiResponse.paginated(res, data, total, page!, limit!);
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Error fetching vendors', error: error instanceof Error ? error.message : 'Unknown error' });
+        return ApiResponse.error(res, 'Error fetching vendors', error instanceof Error ? error.message : 'Unknown error');
     }
 });
 
@@ -29,19 +43,17 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 router.get('/:id', param('id').isMongoId(), async (req: AuthRequest, res: Response) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(req.params.id!)) {
-            res.status(400).json({ success: false, message: 'Invalid vendor ID' });
-            return;
+            return ApiResponse.badRequest(res, 'Invalid vendor ID');
         }
 
-        const vendor = await Vendor.findById(req.params.id!);
+        const vendor = await Vendor.findById(req.params.id!).select('-__v').lean();
         if (!vendor) {
-            res.status(404).json({ success: false, message: 'Vendor not found' });
-            return;
+            return ApiResponse.notFound(res, 'Vendor not found');
         }
 
-        res.json({ success: true, data: vendor });
+        return ApiResponse.success(res, vendor);
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Error fetching vendor', error: error instanceof Error ? error.message : 'Unknown error' });
+        return ApiResponse.error(res, 'Error fetching vendor', error instanceof Error ? error.message : 'Unknown error');
     }
 });
 
@@ -56,16 +68,15 @@ router.post('/',
         try {
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
-                res.status(400).json({ success: false, errors: errors.array() });
-                return;
+                return ApiResponse.badRequest(res, 'Validation failed', errors.array());
             }
 
             const vendor = new Vendor(req.body);
             await vendor.save();
 
-            res.status(201).json({ success: true, message: 'Vendor created successfully', data: vendor });
+            return ApiResponse.created(res, vendor, 'Vendor created successfully');
         } catch (error) {
-            res.status(400).json({ success: false, message: 'Error creating vendor', error: error instanceof Error ? error.message : 'Unknown error' });
+            return ApiResponse.error(res, 'Error creating vendor', error instanceof Error ? error.message : 'Unknown error', 400);
         }
     }
 );
@@ -82,19 +93,17 @@ router.put('/:id',
         try {
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
-                res.status(400).json({ success: false, errors: errors.array() });
-                return;
+                return ApiResponse.badRequest(res, 'Validation failed', errors.array());
             }
 
             const vendor = await Vendor.findByIdAndUpdate(req.params.id!, req.body, { new: true, runValidators: true });
             if (!vendor) {
-                res.status(404).json({ success: false, message: 'Vendor not found' });
-                return;
+                return ApiResponse.notFound(res, 'Vendor not found');
             }
 
-            res.json({ success: true, message: 'Vendor updated successfully', data: vendor });
+            return ApiResponse.success(res, vendor, 'Vendor updated successfully');
         } catch (error) {
-            res.status(400).json({ success: false, message: 'Error updating vendor', error: error instanceof Error ? error.message : 'Unknown error' });
+            return ApiResponse.error(res, 'Error updating vendor', error instanceof Error ? error.message : 'Unknown error', 400);
         }
     }
 );
@@ -107,13 +116,12 @@ router.delete('/:id',
         try {
             const vendor = await Vendor.findByIdAndDelete(req.params.id!);
             if (!vendor) {
-                res.status(404).json({ success: false, message: 'Vendor not found' });
-                return;
+                return ApiResponse.notFound(res, 'Vendor not found');
             }
 
-            res.json({ success: true, message: 'Vendor deleted successfully' });
+            return ApiResponse.deleted(res, 'Vendor deleted successfully');
         } catch (error) {
-            res.status(500).json({ success: false, message: 'Error deleting vendor', error: error instanceof Error ? error.message : 'Unknown error' });
+            return ApiResponse.error(res, 'Error deleting vendor', error instanceof Error ? error.message : 'Unknown error');
         }
     }
 );

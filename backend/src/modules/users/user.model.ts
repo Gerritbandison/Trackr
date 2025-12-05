@@ -11,6 +11,16 @@ export interface IUser extends Document {
     twoFactorEnabled: boolean;
     twoFactorSecret?: string;
     lastLogin?: Date;
+
+    // Azure AD / Entra ID Integration Fields
+    azureAdId?: string; // Azure AD Object ID
+    authProvider: 'local' | 'azure-ad'; // Authentication provider
+    azureAdGroups?: string[]; // Cached Azure AD group memberships
+    lastSyncDate?: Date; // Last sync from Azure AD
+    jobTitle?: string; // Job title from Azure AD
+    officeLocation?: string; // Office location from Azure AD
+    mobilePhone?: string; // Mobile phone from Azure AD
+
     createdAt: Date;
     updatedAt: Date;
     comparePassword(candidatePassword: string): Promise<boolean>;
@@ -61,6 +71,38 @@ const userSchema = new Schema<IUser>(
         },
         lastLogin: {
             type: Date
+        },
+
+        // Azure AD / Entra ID Integration Fields
+        azureAdId: {
+            type: String,
+            unique: true,
+            sparse: true
+        },
+        authProvider: {
+            type: String,
+            enum: ['local', 'azure-ad'],
+            default: 'local',
+            required: true
+        },
+        azureAdGroups: {
+            type: [String],
+            default: []
+        },
+        lastSyncDate: {
+            type: Date
+        },
+        jobTitle: {
+            type: String,
+            trim: true
+        },
+        officeLocation: {
+            type: String,
+            trim: true
+        },
+        mobilePhone: {
+            type: String,
+            trim: true
         }
     },
     {
@@ -68,8 +110,13 @@ const userSchema = new Schema<IUser>(
     }
 );
 
-// Hash password before saving
+// Hash password before saving (only for local auth users)
 userSchema.pre('save', async function (next) {
+    // Skip password hashing for Azure AD users
+    if (this.authProvider === 'azure-ad') {
+        return next();
+    }
+
     if (!this.isModified('password')) return next();
 
     try {
@@ -97,5 +144,14 @@ userSchema.methods.toJSON = function () {
     delete obj.twoFactorSecret;
     return obj;
 };
+
+// Compound indexes for common query patterns
+userSchema.index({ role: 1, isActive: 1 }); // Get active users by role
+userSchema.index({ department: 1, isActive: 1 }); // Get active users by department
+userSchema.index({ isActive: 1, createdAt: -1 }); // Sort users by creation date
+
+// Azure AD / Entra ID indexes
+userSchema.index({ azureAdId: 1 }, { sparse: true }); // Query by Azure AD Object ID
+userSchema.index({ authProvider: 1, isActive: 1 }); // Filter by auth provider and active status
 
 export const User = mongoose.model<IUser>('User', userSchema);

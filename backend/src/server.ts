@@ -11,6 +11,11 @@ import userRoutes from './modules/users/user.routes';
 import licenseRoutes from './modules/licenses/license.routes';
 import departmentRoutes from './modules/departments/department.routes';
 import vendorRoutes from './modules/vendors/vendor.routes';
+import historyRoutes from './modules/history/history.routes';
+import assetGroupRoutes from './modules/asset-groups/asset-group.routes';
+import onboardingKitRoutes from './modules/onboarding-kits/onboarding-kit.routes';
+import notificationRoutes from './modules/notifications/notification.routes';
+import locationRoutes from './modules/locations/location.routes';
 import { errorHandler } from './core/middleware/error.middleware';
 import { auditMiddleware } from './core/middleware/audit.middleware';
 import logger from './core/utils/logger';
@@ -94,6 +99,11 @@ app.use('/api/v1/assets', assetRoutes);
 app.use('/api/v1/licenses', licenseRoutes);
 app.use('/api/v1/departments', departmentRoutes);
 app.use('/api/v1/vendors', vendorRoutes);
+app.use('/api/v1/locations', locationRoutes);
+app.use('/api/v1/audit-logs', historyRoutes);
+app.use('/api/v1/asset-groups', assetGroupRoutes);
+app.use('/api/v1/onboarding-kits', onboardingKitRoutes);
+app.use('/api/v1/notifications', notificationRoutes);
 
 // Sentry error handler (must be before other error handlers, after routes)
 app.use(sentryErrorHandler);
@@ -123,10 +133,11 @@ const connectDB = async (retries = 5) => {
 };
 
 connectDB().then(() => {
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
         logger.info(`🚀 Server running on port ${PORT}`);
         logger.info(`🏥 Health check: http://localhost:${PORT}/health`);
         logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
+        logger.info(`📱 Network access enabled - accessible from other devices`);
     });
 });
 
