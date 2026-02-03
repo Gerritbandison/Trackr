@@ -175,6 +175,18 @@ AssetSchema.index({ managementAgent: 1, complianceState: 1 }); // Filter by mana
 AssetSchema.index({ complianceState: 1, lastCheckIn: -1 }); // Monitor compliance status
 
 // Helper method to check if asset is under warranty
+// Add indexes for performance
+AssetSchema.index({ assetTag: 1 }, { unique: true });
+AssetSchema.index({ serialNumber: 1 }, { unique: true });
+AssetSchema.index({ status: 1, createdAt: -1 });
+AssetSchema.index({ assignedTo: 1 });
+AssetSchema.index({ category: 1 });
+AssetSchema.index({ location: 1 });
+AssetSchema.index({ intuneDeviceId: 1 }, { sparse: true });
+AssetSchema.index({ azureAdDeviceId: 1 }, { sparse: true });
+AssetSchema.index({ "warranty.endDate": 1 });
+
+
 AssetSchema.methods.isUnderWarranty = function(): boolean {
     if (!this.warranty || !this.warranty.endDate) {
         return false;

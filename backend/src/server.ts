@@ -27,6 +27,18 @@ import {
 
 dotenv.config();
 
+// Validate required environment variables on startup
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+    logger.error('❌ JWT_SECRET must be set and at least 32 characters long');
+    logger.error('💡 Generate one with: openssl rand -base64 32');
+    process.exit(1);
+}
+
+if (!process.env.MONGODB_URI && !process.env.MONGO_URI) {
+    logger.error('❌ MONGODB_URI or MONGO_URI must be set');
+    process.exit(1);
+}
+
 const app = express();
 const PORT = parseInt(process.env.PORT || '5000', 10);
 
@@ -36,8 +48,16 @@ initializeSentry(app);
 // Rate limiting configuration
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // Limit each IP to 5 login requests per windowMs
+    max: 10, // Increased from 5 to 10 for better UX
     message: 'Too many login attempts, please try again after 15 minutes',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const bulkLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 50, // Limit bulk operations
+    message: 'Too many bulk operations, please try again later',
     standardHeaders: true,
     legacyHeaders: false,
 });
@@ -51,8 +71,22 @@ const apiLimiter = rateLimit({
 });
 
 // CORS configuration
+const whitelist = (process.env.CORS_ORIGINS || process.env.CORS_ORIGIN || 'http://localhost:5173')
+    .split(',')
+    .map(origin => origin.trim());
+
 const corsOptions = {
-    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+        if (!origin || whitelist.includes(origin)) {
+            callback(null, true);
+        } else if (process.env.NODE_ENV === 'development') {
+            // Allow all origins in development
+            callback(null, true);
+        } else {
+            logger.warn(`Blocked CORS request from origin: ${origin}`);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
     optionsSuccessStatus: 200
 };
