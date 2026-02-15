@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { FiBell, FiLogOut, FiUser, FiChevronDown, FiMenu } from 'react-icons/fi';
+import { FiBell, FiLogOut, FiUser, FiChevronDown, FiMenu, FiSun, FiMoon } from 'react-icons/fi';
 import { useAuth } from '../../contexts/AuthContext';
 import { notificationsAPI } from '../../config/api';
 import NotificationPanel from '../ui/NotificationPanel';
 import GlobalSearch from '../ui/GlobalSearch';
+import { useDarkMode } from '../../store/useAppStore';
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -15,6 +16,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
   const { user, logout } = useAuth();
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
   const [showNotifications, setShowNotifications] = useState<boolean>(false);
+  const { enabled: darkMode, toggle: toggleDarkMode } = useDarkMode();
 
   // Fetch unread notification count
   const { data: notificationData } = useQuery({
@@ -26,7 +28,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
   const unreadCount = notificationData?.unreadCount || 0;
 
   return (
-    <header className="h-18 bg-gradient-to-r from-slate-50 via-slate-100 to-slate-50 backdrop-blur-md border-b-2 border-slate-200 flex items-center gap-6 px-8 shadow-soft sticky top-0 z-30">
+    <header className="h-18 bg-gradient-to-r from-slate-50 via-slate-100 to-slate-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 backdrop-blur-md border-b-2 border-slate-200 dark:border-gray-700 flex items-center gap-6 px-8 shadow-soft sticky top-0 z-30">
       {/* Mobile menu toggle */}
       <button
         onClick={onToggleSidebar}
@@ -57,10 +59,23 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
 
       {/* Right Side */}
       <div className="flex items-center gap-3">
+        {/* Dark Mode Toggle */}
+        <button
+          onClick={toggleDarkMode}
+          className="p-3 text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-gray-700 rounded-2xl transition-all group border-2 border-transparent hover:border-primary-200 dark:hover:border-primary-700"
+          title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {darkMode ? (
+            <FiSun size={22} className="group-hover:scale-110 group-hover:rotate-12 transition-all duration-200" strokeWidth={2} />
+          ) : (
+            <FiMoon size={22} className="group-hover:scale-110 group-hover:-rotate-12 transition-all duration-200" strokeWidth={2} />
+          )}
+        </button>
+
         {/* Notifications */}
         <button
           onClick={() => setShowNotifications(true)}
-          className="relative p-3 text-slate-600 hover:text-primary-600 hover:bg-primary-50 rounded-2xl transition-all group border-2 border-transparent hover:border-primary-200"
+          className="relative p-3 text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-gray-700 rounded-2xl transition-all group border-2 border-transparent hover:border-primary-200 dark:hover:border-primary-700"
         >
           <FiBell size={22} className="group-hover:scale-110 group-hover:rotate-3 transition-all duration-200" strokeWidth={2} />
           {unreadCount > 0 && (

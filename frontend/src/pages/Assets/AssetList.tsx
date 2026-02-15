@@ -1,15 +1,15 @@
-import { useState, useMemo, memo } from 'react';
+import { useState, useMemo, memo, useEffect, useCallback, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   FiPlus, FiEdit, FiTrash2, FiEye, FiUserPlus, FiPackage, FiGrid, FiSearch,
-  FiCheckSquare, FiSquare, FiCheckCircle, FiDownload
+  FiCheckSquare, FiSquare, FiCheckCircle, FiDownload, FiArchive, FiCommand
 } from 'react-icons/fi';
 import { getCategoryIcon } from '../../utils/assetCategoryIcons';
 import { assetsAPI } from '../../config/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { handleError } from '../../utils/errorHandler';
-import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import LoadingSkeleton from '../../components/ui/LoadingSkeleton';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
 import Badge, { getStatusVariant, getConditionVariant } from '../../components/ui/Badge';
@@ -18,6 +18,7 @@ import BulkActions from '../../components/ui/BulkActions';
 import toast from 'react-hot-toast';
 import AssetForm from './AssetForm';
 import AssignAssetModal from './AssignAssetModal';
+import { useAppStore } from '../../store/useAppStore';
 
 interface Asset {
   _id?: string;
@@ -40,6 +41,7 @@ interface AssetsData {
 
 const AssetList = () => {
   const { canManage } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
@@ -52,6 +54,10 @@ const AssetList = () => {
   const [selectedAssets, setSelectedAssets] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [focusedIndex, setFocusedIndex] = useState<number>(-1);
+  const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
+  const listRef = useRef<HTMLDivElement>(null);
+  const keyboardShortcutsEnabled = useAppStore((state) => state.keyboardShortcutsEnabled);
 
   // Fetch assets with stats
   const { data: assetsData, isLoading, isError, error, refetch } = useQuery<AssetsData>({
@@ -177,6 +183,86 @@ const AssetList = () => {
     },
   });
 
+  // Keyboard navigation
+  useEffect(() => {
+    if (!keyboardShortcutsEnabled) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if user is typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) {
+        return;
+      }
+
+      const assets = Array.isArray(assetsData?.data) ? assetsData.data : [];
+      
+      switch (e.key) {
+        case 'j': // Move down
+          e.preventDefault();
+          setFocusedIndex((prev) => Math.min(prev + 1, assets.length - 1));
+          break;
+        case 'k': // Move up
+          e.preventDefault();
+          setFocusedIndex((prev) => Math.max(prev - 1, 0));
+          break;
+        case 'Enter': // Open focused asset
+          if (focusedIndex >= 0 && focusedIndex < assets.length) {
+            e.preventDefault();
+            navigate(`/assets/${assets[focusedIndex]._id}`);
+          }
+          break;
+        case 'x': // Toggle selection
+          if (focusedIndex >= 0 && focusedIndex < assets.length) {
+            e.preventDefault();
+            toggleSelectAsset(assets[focusedIndex]._id);
+          }
+          break;
+        case 'a': // Select all (with shift)
+          if (e.shiftKey) {
+            e.preventDefault();
+            toggleSelectAll();
+          }
+          break;
+        case 'n': // New asset
+          if (canManage() && !showCreateModal) {
+            e.preventDefault();
+            setShowCreateModal(true);
+          }
+          break;
+        case 'Escape': // Clear selection / close modal
+          if (selectedAssets.length > 0) {
+            e.preventDefault();
+            setSelectedAssets([]);
+          }
+          setFocusedIndex(-1);
+          break;
+        case '/': // Focus search
+          e.preventDefault();
+          const searchInput = document.querySelector('input[type="search"], input[placeholder*="Search"]') as HTMLInputElement;
+          if (searchInput) searchInput.focus();
+          break;
+        case '?': // Show keyboard shortcuts
+          e.preventDefault();
+          setShowKeyboardHelp((prev) => !prev);
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [keyboardShortcutsEnabled, focusedIndex, assetsData, selectedAssets, showCreateModal, canManage, navigate]);
+
+  // Scroll focused item into view
+  useEffect(() => {
+    if (focusedIndex >= 0 && listRef.current) {
+      const items = listRef.current.querySelectorAll('[data-asset-item]');
+      if (items[focusedIndex]) {
+        items[focusedIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+  }, [focusedIndex]);
+
   const handleDelete = (id, name) => {
     if (window.confirm(`Are you sure you want to delete ${name}?`)) {
       deleteMutation.mutate(id);
@@ -274,7 +360,7 @@ const AssetList = () => {
     setPage(1);
   };
 
-  if (isLoading) return <LoadingSpinner />;
+  if (isLoading) return <LoadingSkeleton type="assetGrid" rows={8} />;
 
   // Handle error state
   if (isError) {
@@ -316,6 +402,16 @@ const AssetList = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          {keyboardShortcutsEnabled && (
+            <button
+              onClick={() => setShowKeyboardHelp(true)}
+              className="btn btn-outline btn-sm flex items-center gap-2 text-gray-500"
+              title="Keyboard shortcuts (?)"
+            >
+              <FiCommand size={16} />
+              <span className="hidden sm:inline">?</span>
+            </button>
+          )}
           <button
             onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
             className="btn btn-outline flex items-center gap-2"
@@ -429,15 +525,15 @@ const AssetList = () => {
       {/* Bulk Actions Toolbar */}
       {selectedAssets.length > 0 && (
         <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 animate-slide-up">
-          <div className="bg-white rounded-xl shadow-2xl border border-gray-200 p-4 flex items-center gap-4">
-            <div className="flex items-center gap-2 px-3 py-2 bg-primary-50 rounded-lg">
-              <FiCheckCircle className="text-primary-600" size={18} />
-              <span className="font-semibold text-primary-900">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 flex items-center gap-4">
+            <div className="flex items-center gap-2 px-3 py-2 bg-primary-50 dark:bg-primary-900/30 rounded-lg">
+              <FiCheckCircle className="text-primary-600 dark:text-primary-400" size={18} />
+              <span className="font-semibold text-primary-900 dark:text-primary-200">
                 {selectedAssets.length} selected
               </span>
             </div>
 
-            <div className="h-8 w-px bg-gray-300"></div>
+            <div className="h-8 w-px bg-gray-300 dark:bg-gray-600"></div>
 
             <div className="flex items-center gap-2">
               <select
@@ -456,6 +552,14 @@ const AssetList = () => {
                 <option value="retired">Retired</option>
               </select>
               <button
+                onClick={() => handleBulkStatusChange('retired')}
+                className="btn btn-sm btn-outline flex items-center gap-2"
+                title="Archive selected assets"
+              >
+                <FiArchive size={16} />
+                Archive
+              </button>
+              <button
                 onClick={() => handleBulkExport()}
                 className="btn btn-sm btn-primary flex items-center gap-2"
               >
@@ -473,15 +577,66 @@ const AssetList = () => {
               )}
             </div>
 
-            <div className="h-8 w-px bg-gray-300"></div>
+            <div className="h-8 w-px bg-gray-300 dark:bg-gray-600"></div>
 
             <button
               onClick={() => setSelectedAssets([])}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              title="Clear selection"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-500 dark:text-gray-400"
+              title="Clear selection (Esc)"
             >
               ×
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Keyboard Shortcuts Help Modal */}
+      {showKeyboardHelp && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowKeyboardHelp(false)}>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <FiCommand size={20} />
+                Keyboard Shortcuts
+              </h3>
+              <button onClick={() => setShowKeyboardHelp(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+                ×
+              </button>
+            </div>
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700">
+                <span className="text-gray-600 dark:text-gray-300">Navigate down</span>
+                <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-800 dark:text-gray-200 font-mono">j</kbd>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700">
+                <span className="text-gray-600 dark:text-gray-300">Navigate up</span>
+                <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-800 dark:text-gray-200 font-mono">k</kbd>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700">
+                <span className="text-gray-600 dark:text-gray-300">Open asset</span>
+                <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-800 dark:text-gray-200 font-mono">Enter</kbd>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700">
+                <span className="text-gray-600 dark:text-gray-300">Toggle selection</span>
+                <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-800 dark:text-gray-200 font-mono">x</kbd>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700">
+                <span className="text-gray-600 dark:text-gray-300">Select all</span>
+                <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-800 dark:text-gray-200 font-mono">Shift+A</kbd>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700">
+                <span className="text-gray-600 dark:text-gray-300">New asset</span>
+                <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-800 dark:text-gray-200 font-mono">n</kbd>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700">
+                <span className="text-gray-600 dark:text-gray-300">Focus search</span>
+                <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-800 dark:text-gray-200 font-mono">/</kbd>
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <span className="text-gray-600 dark:text-gray-300">Clear selection / Close</span>
+                <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-800 dark:text-gray-200 font-mono">Esc</kbd>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -503,9 +658,13 @@ const AssetList = () => {
               </div>
             </div>
           )}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {Array.isArray(assets) && assets.length > 0 ? assets.map((asset) => (
-              <div key={asset._id} className={`asset-card ${selectedAssets.includes(asset._id) ? 'ring-2 ring-primary-500 bg-primary-50' : ''}`}>
+          <div ref={listRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {Array.isArray(assets) && assets.length > 0 ? assets.map((asset, index) => (
+              <div 
+                key={asset._id} 
+                data-asset-item
+                className={`asset-card transition-all ${selectedAssets.includes(asset._id) ? 'ring-2 ring-primary-500 bg-primary-50 dark:bg-primary-900/20' : ''} ${focusedIndex === index ? 'ring-2 ring-blue-400 shadow-lg scale-[1.02]' : ''}`}
+              >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-start gap-2">
                     {canManage() && (

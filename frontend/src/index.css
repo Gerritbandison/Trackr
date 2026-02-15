@@ -50,15 +50,17 @@
 @layer base {
   body {
     @apply bg-gradient-to-br from-slate-100 via-slate-50 to-gray-100 text-secondary-900;
+    @apply dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 dark:text-gray-100;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   * {
-    @apply border-slate-200;
+    @apply border-slate-200 dark:border-gray-700;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold text-secondary-900 tracking-tight;
+    @apply font-semibold text-secondary-900 dark:text-white tracking-tight;
   }
   
   h1 {
@@ -98,6 +100,7 @@
 
   .btn-outline {
     @apply border-2 border-slate-300 bg-gradient-to-br from-white to-slate-50 text-slate-700 hover:bg-gradient-to-r hover:from-slate-100 hover:to-slate-50 hover:border-slate-400 focus:ring-primary-500 hover:shadow-md;
+    @apply dark:border-gray-600 dark:from-gray-800 dark:to-gray-700 dark:text-gray-200 dark:hover:from-gray-700 dark:hover:to-gray-600 dark:hover:border-gray-500;
   }
 
   .btn-sm {
@@ -111,10 +114,12 @@
   /* Card Styles */
   .card {
     @apply bg-gradient-to-br from-white via-slate-50 to-white rounded-3xl shadow-lg border-2 border-slate-200 backdrop-blur-sm hover:shadow-xl hover:border-primary-300 transition-all duration-300;
+    @apply dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 dark:border-gray-700 dark:hover:border-primary-600;
   }
 
   .card-header {
     @apply px-6 py-5 border-b-2 border-slate-200 bg-gradient-to-r from-slate-100 to-slate-50 rounded-t-3xl;
+    @apply dark:border-gray-700 dark:from-gray-900 dark:to-gray-800;
   }
 
   .card-body {
@@ -128,10 +133,11 @@
   /* Input Styles */
   .input {
     @apply w-full px-4 py-3 border-2 border-slate-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all bg-gradient-to-br from-white to-slate-50 text-slate-900 placeholder:text-slate-400 font-medium shadow-sm;
+    @apply dark:border-gray-600 dark:from-gray-800 dark:to-gray-700 dark:text-white dark:placeholder:text-gray-500;
   }
 
   .input:hover {
-    @apply border-slate-400 shadow-sm;
+    @apply border-slate-400 shadow-sm dark:border-gray-500;
   }
 
   .input:focus {
@@ -139,11 +145,11 @@
   }
 
   .input-error {
-    @apply border-red-500 focus:ring-red-500 bg-red-50;
+    @apply border-red-500 focus:ring-red-500 bg-red-50 dark:bg-red-900/20;
   }
 
   .label {
-    @apply block text-sm font-bold text-slate-700 mb-2.5 tracking-wide;
+    @apply block text-sm font-bold text-slate-700 dark:text-gray-300 mb-2.5 tracking-wide;
   }
 
   .input-group {
@@ -391,7 +397,7 @@
 
   /* Category Card */
   .category-card {
-    @apply bg-white rounded-2xl p-5 border-2 border-slate-200 transition-all duration-200 hover:border-primary-400 hover:shadow-lg cursor-pointer;
+    @apply bg-white dark:bg-gray-800 rounded-2xl p-5 border-2 border-slate-200 dark:border-gray-700 transition-all duration-200 hover:border-primary-400 dark:hover:border-primary-500 hover:shadow-lg cursor-pointer;
     @apply flex flex-col items-center justify-center text-center;
   }
 
@@ -401,7 +407,7 @@
 
   /* Asset Card */
   .asset-card {
-    @apply bg-white rounded-2xl p-5 border-2 border-slate-200 hover:border-primary-300 hover:shadow-lg transition-all duration-200;
+    @apply bg-white dark:bg-gray-800 rounded-2xl p-5 border-2 border-slate-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-500 hover:shadow-lg transition-all duration-200;
   }
 
   .asset-card:hover {

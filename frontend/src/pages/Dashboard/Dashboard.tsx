@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import {
   FiPackage,
@@ -12,6 +12,9 @@ import {
   FiDollarSign,
   FiShield,
   FiActivity,
+  FiRefreshCw,
+  FiPlus,
+  FiDownload,
 } from 'react-icons/fi';
 import { assetsAPI, usersAPI, licensesAPI, assetGroupsAPI } from '../../config/api';
 import StatCard from '../../components/ui/StatCard';
@@ -84,9 +87,38 @@ interface AssetCategoryData {
 }
 
 const Dashboard = () => {
+  const queryClient = useQueryClient();
   const [showAlertModal, setShowAlertModal] = useState(false);
   const [alertData, setAlertData] = useState<AlertData>({});
   const [selectedDeviceType, setSelectedDeviceType] = useState('all');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+
+  // Manual refresh function
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['assetStats'] }),
+        queryClient.invalidateQueries({ queryKey: ['userStats'] }),
+        queryClient.invalidateQueries({ queryKey: ['licenseStats'] }),
+        queryClient.invalidateQueries({ queryKey: ['all-assets-dashboard'] }),
+        queryClient.invalidateQueries({ queryKey: ['all-licenses-dashboard'] }),
+        queryClient.invalidateQueries({ queryKey: ['low-stock-dashboard'] }),
+      ]);
+      setLastRefresh(new Date());
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [queryClient]);
+
+  // Auto-refresh every 5 minutes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      handleRefresh();
+    }, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [handleRefresh]);
 
   // Fetch statistics
   const { data: assetStats, isLoading: loadingAssets } = useQuery<AssetStats>({
@@ -230,12 +262,45 @@ const Dashboard = () => {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-bold text-secondary-900 tracking-tight">Dashboard</h1>
-          <p className="text-secondary-600 mt-2">
+          <h1 className="text-4xl font-bold text-secondary-900 dark:text-white tracking-tight">Dashboard</h1>
+          <p className="text-secondary-600 dark:text-gray-400 mt-2 flex items-center gap-2">
             Welcome back! Here's your IT overview
+            <span className="text-xs text-secondary-400 dark:text-gray-500 flex items-center gap-1">
+              • Updated {lastRefresh.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </span>
           </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
+          {/* Refresh Button */}
+          <button 
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="btn btn-outline flex items-center gap-2 btn-sm"
+            title="Refresh dashboard data"
+          >
+            <FiRefreshCw size={18} className={isRefreshing ? 'animate-spin' : ''} />
+            <span className="hidden sm:inline">{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
+          </button>
+          
+          {/* Quick Add Dropdown */}
+          <div className="relative group">
+            <button className="btn btn-primary flex items-center gap-2 btn-sm shadow-md hover:shadow-lg">
+              <FiPlus size={18} />
+              <span className="hidden sm:inline">Quick Add</span>
+            </button>
+            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20">
+              <Link to="/assets/new" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                <FiPackage className="inline mr-2" size={16} /> New Asset
+              </Link>
+              <Link to="/licenses/new" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                <FiKey className="inline mr-2" size={16} /> New License
+              </Link>
+              <Link to="/users/new" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                <FiUsers className="inline mr-2" size={16} /> New User
+              </Link>
+            </div>
+          </div>
+
           <Link to="/licenses/optimization" className="btn btn-outline flex items-center gap-2 btn-sm">
             <FiTrendingUp size={18} />
             <span className="hidden sm:inline">Optimization</span>

@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { FiEye, FiPlus, FiEdit, FiClock, FiCloud, FiUsers } from 'react-icons/fi';
 import { licensesAPI } from '../../config/api';
-import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import LoadingSkeleton from '../../components/ui/LoadingSkeleton';
 import SearchBar from '../../components/ui/SearchBar';
 import Pagination from '../../components/ui/Pagination';
 import Badge, { getStatusVariant } from '../../components/ui/Badge';
@@ -40,7 +40,7 @@ const LicenseList = () => {
     setPage(1); // Reset to first page on new search
   };
 
-  if (isLoading) return <LoadingSpinner />;
+  if (isLoading) return <LoadingSkeleton type="licenseTable" rows={8} />;
 
   const { data: licenses, pagination } = data;
 

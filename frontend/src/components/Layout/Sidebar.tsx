@@ -108,13 +108,14 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onToggle, mobileOp
       <aside className={`
         ${collapsed ? 'w-20' : 'w-64'}
         bg-gradient-to-br from-slate-100 via-slate-50 to-white
-        border-r-2 border-slate-200 flex flex-col shadow-soft
+        dark:from-gray-900 dark:via-gray-800 dark:to-gray-900
+        border-r-2 border-slate-200 dark:border-gray-700 flex flex-col shadow-soft
         transition-all duration-300 ease-in-out
         fixed lg:relative h-full z-40
         ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         {/* Logo */}
-        <div className="h-18 flex items-center px-6 border-b-2 border-slate-200 bg-gradient-to-r from-slate-50 to-white">
+        <div className="h-18 flex items-center px-6 border-b-2 border-slate-200 dark:border-gray-700 bg-gradient-to-r from-slate-50 to-white dark:from-gray-900 dark:to-gray-800">
           <div className="flex items-center gap-3">
             <div className="relative">
               <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary-600 via-primary-500 to-primary-700 flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary-500/30">
@@ -136,7 +137,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onToggle, mobileOp
         {/* Navigation */}
         <nav role="navigation" aria-label="Main navigation" className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
           {!collapsed && (
-            <div className="text-xs font-semibold text-secondary-500 uppercase tracking-wider px-3 mb-3">
+            <div className="text-xs font-semibold text-secondary-500 dark:text-gray-500 uppercase tracking-wider px-3 mb-3">
               Main Menu
             </div>
           )}
@@ -144,7 +145,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onToggle, mobileOp
             // Handle divider items
             if (item.type === 'divider') {
               return item.show && !collapsed ? (
-                <div key={`divider-${index}`} className="text-xs font-semibold text-secondary-500 uppercase tracking-wider px-3 mb-3 mt-6">
+                <div key={`divider-${index}`} className="text-xs font-semibold text-secondary-500 dark:text-gray-500 uppercase tracking-wider px-3 mb-3 mt-6">
                   {item.label}
                 </div>
               ) : null;
@@ -159,7 +160,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onToggle, mobileOp
                 className={({ isActive }) =>
                   `group relative flex items-center ${collapsed ? 'justify-center' : 'gap-3'} px-3 py-3 rounded-2xl font-semibold transition-all duration-200 ${isActive
                     ? 'bg-gradient-to-r from-primary-600 to-primary-700 text-white shadow-lg shadow-primary-500/30 scale-[1.02]'
-                    : 'text-slate-700 hover:bg-white hover:shadow-md hover:text-primary-600'
+                    : 'text-slate-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 hover:shadow-md hover:text-primary-600 dark:hover:text-primary-400'
                   }`
                 }
                 title={collapsed ? item.label : ''}
@@ -188,8 +189,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onToggle, mobileOp
         </nav>
 
         {/* User Info */}
-        <div className="p-4 border-t-2 border-slate-200 bg-gradient-to-br from-slate-50 to-white">
-          <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'} p-3.5 rounded-2xl bg-gradient-to-br from-primary-50/50 via-cyan-50/30 to-white hover:shadow-lg transition-all duration-200 cursor-pointer group border-2 border-transparent hover:border-primary-200`}>
+        <div className="p-4 border-t-2 border-slate-200 dark:border-gray-700 bg-gradient-to-br from-slate-50 to-white dark:from-gray-900 dark:to-gray-800">
+          <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'} p-3.5 rounded-2xl bg-gradient-to-br from-primary-50/50 via-cyan-50/30 to-white dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 hover:shadow-lg transition-all duration-200 cursor-pointer group border-2 border-transparent hover:border-primary-200 dark:hover:border-primary-600`}>
             <div className="relative">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-600 via-primary-500 to-accent-600 flex items-center justify-center text-white font-bold shadow-lg group-hover:scale-110 group-hover:shadow-xl transition-all duration-200 flex-shrink-0">
                 {user?.name?.charAt(0).toUpperCase()}
@@ -200,10 +201,10 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onToggle, mobileOp
             </div>
             {!collapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-slate-900 truncate">
+                <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
                   {user?.name}
                 </p>
-                <p className="text-xs text-slate-600 capitalize flex items-center gap-1.5 font-medium">
+                <p className="text-xs text-slate-600 dark:text-gray-400 capitalize flex items-center gap-1.5 font-medium">
                   <span className="w-2 h-2 rounded-full bg-success-500 shadow-sm"></span>
                   <span className="truncate">{user?.role}</span>
                 </p>
