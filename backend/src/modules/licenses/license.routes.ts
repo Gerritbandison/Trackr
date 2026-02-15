@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { body, param } from 'express-validator';
 import {
     getLicenses,
     getLicenseById,
@@ -14,81 +13,287 @@ import {
     getLicenseAssignmentHistory,
     getUserLicenses,
     exportToCSV,
-    bulkImport
+    bulkImport,
+    // New controllers
+    archiveLicense,
+    restoreLicense,
+    bulkCreateLicenses,
+    bulkUpdateLicenses,
+    bulkArchiveLicenses,
+    allocateSeat,
+    deallocateSeat,
+    getUpcomingRenewals,
+    getOptimizationRecommendations,
+    getStatistics
 } from './license.controller';
 import { authenticate, authorize } from '../../core/middleware/auth.middleware';
+import { validate, validateQuery, validateParams } from '../../core/middleware/validate.middleware';
+import {
+    createLicenseSchema,
+    updateLicenseSchema,
+    licenseQuerySchema,
+    licenseIdParamSchema,
+    userIdParamSchema,
+    bulkCreateLicenseSchema,
+    bulkUpdateLicenseSchema,
+    bulkArchiveLicenseSchema,
+    allocateSeatSchema,
+    deallocateSeatSchema,
+    assignLicenseSchema,
+    unassignLicenseSchema,
+    archiveLicenseSchema,
+    renewalQuerySchema,
+    optimizationQuerySchema,
+    statisticsQuerySchema,
+    expiringLicensesQuerySchema,
+    importCsvSchema
+} from '../../core/schemas/license.schemas';
 
 const router = Router();
-
-// Validation rules
-const createLicenseValidation = [
-    body('name').trim().notEmpty().withMessage('License name is required'),
-    body('vendor').trim().notEmpty().withMessage('Vendor is required'),
-    body('type').isIn(['perpetual', 'subscription', 'trial']).withMessage('Invalid license type'),
-    body('category').trim().notEmpty().withMessage('Category is required'),
-    body('totalSeats').isInt({ min: 1 }).withMessage('Total seats must be at least 1'),
-    body('purchaseDate').isISO8601().withMessage('Invalid purchase date'),
-    body('purchaseCost').isNumeric().withMessage('Purchase cost must be a number'),
-    body('expirationDate').optional().isISO8601().withMessage('Invalid expiration date'),
-    body('annualCost').optional().isNumeric().withMessage('Annual cost must be a number')
-];
-
-const updateLicenseValidation = [
-    param('id').isMongoId().withMessage('Invalid license ID'),
-    body('name').optional().trim().notEmpty().withMessage('License name cannot be empty'),
-    body('vendor').optional().trim().notEmpty().withMessage('Vendor cannot be empty'),
-    body('type').optional().isIn(['perpetual', 'subscription', 'trial']).withMessage('Invalid license type'),
-    body('totalSeats').optional().isInt({ min: 1 }).withMessage('Total seats must be at least 1'),
-    body('purchaseCost').optional().isNumeric().withMessage('Purchase cost must be a number')
-];
-
-const idValidation = [
-    param('id').isMongoId().withMessage('Invalid license ID')
-];
 
 // All routes require authentication
 router.use(authenticate);
 
-// Get all licenses - accessible by all authenticated users
-router.get('/', getLicenses);
+// ============================================
+// Statistics & Reports (placed before :id routes)
+// ============================================
 
-// Get compliance report - accessible by admin and manager
-router.get('/reports/compliance', authorize('admin', 'manager'), getComplianceReport);
+// GET /api/v1/licenses/statistics - License statistics
+router.get(
+    '/statistics',
+    authorize('admin', 'manager'),
+    validateQuery(statisticsQuerySchema),
+    getStatistics
+);
 
-// Get utilization stats - accessible by admin and manager
-router.get('/reports/utilization', authorize('admin', 'manager'), getUtilizationStats);
+// GET /api/v1/licenses/compliance - Compliance report
+router.get(
+    '/compliance',
+    authorize('admin', 'manager'),
+    getComplianceReport
+);
 
-// Get expiring licenses - accessible by all authenticated users
-router.get('/expiring', getExpiringLicenses);
+// GET /api/v1/licenses/renewals - Upcoming renewals
+router.get(
+    '/renewals',
+    authorize('admin', 'manager'),
+    validateQuery(renewalQuerySchema),
+    getUpcomingRenewals
+);
 
-// Get license by ID - accessible by all authenticated users
-router.get('/:id', idValidation, getLicenseById);
+// GET /api/v1/licenses/optimization - Cost optimization suggestions
+router.get(
+    '/optimization',
+    authorize('admin', 'manager'),
+    validateQuery(optimizationQuerySchema),
+    getOptimizationRecommendations
+);
 
-// Create license - requires admin or manager role
-router.post('/', authorize('admin', 'manager'), createLicenseValidation, createLicense);
+// GET /api/v1/licenses/expiring - Expiring licenses
+router.get(
+    '/expiring',
+    validateQuery(expiringLicensesQuerySchema),
+    getExpiringLicenses
+);
 
-// Update license - requires admin or manager role
-router.put('/:id', authorize('admin', 'manager'), updateLicenseValidation, updateLicense);
+// GET /api/v1/licenses/reports/compliance - Legacy compliance report
+router.get(
+    '/reports/compliance',
+    authorize('admin', 'manager'),
+    getComplianceReport
+);
 
-// Delete license - requires admin role only
-router.delete('/:id', authorize('admin'), idValidation, deleteLicense);
+// GET /api/v1/licenses/reports/utilization - Utilization stats
+router.get(
+    '/reports/utilization',
+    authorize('admin', 'manager'),
+    getUtilizationStats
+);
 
-// Assign license to user - requires admin or manager role
-router.post('/:id/assign', authorize('admin', 'manager'), idValidation, assignLicense);
+// ============================================
+// Bulk Operations
+// ============================================
 
-// Unassign license from user - requires admin or manager role
-router.post('/:id/unassign', authorize('admin', 'manager'), idValidation, unassignLicense);
+// POST /api/v1/licenses/bulk - Bulk create licenses
+router.post(
+    '/bulk',
+    authorize('admin', 'manager'),
+    validate(bulkCreateLicenseSchema),
+    bulkCreateLicenses
+);
 
-// Get license assignment history - accessible by all authenticated users
-router.get('/:id/assignment-history', idValidation, getLicenseAssignmentHistory);
+// PATCH /api/v1/licenses/bulk - Bulk update licenses
+router.patch(
+    '/bulk',
+    authorize('admin', 'manager'),
+    validate(bulkUpdateLicenseSchema),
+    bulkUpdateLicenses
+);
 
-// Get licenses for a specific user - accessible by all authenticated users
-router.get('/user/:userId', [param('userId').isMongoId().withMessage('Invalid user ID')], getUserLicenses);
+// POST /api/v1/licenses/bulk/archive - Bulk archive licenses
+router.post(
+    '/bulk/archive',
+    authorize('admin', 'manager'),
+    validate(bulkArchiveLicenseSchema),
+    bulkArchiveLicenses
+);
 
-// Export licenses to CSV - accessible by all authenticated users
-router.get('/export/csv', exportToCSV);
+// ============================================
+// Import/Export
+// ============================================
 
-// Bulk import licenses from CSV - requires admin or manager role
-router.post('/import/csv', authorize('admin', 'manager'), bulkImport);
+// GET /api/v1/licenses/export/csv - Export licenses to CSV
+router.get(
+    '/export/csv',
+    validateQuery(licenseQuerySchema),
+    exportToCSV
+);
+
+// POST /api/v1/licenses/import/csv - Bulk import licenses from CSV
+router.post(
+    '/import/csv',
+    authorize('admin', 'manager'),
+    validate(importCsvSchema),
+    bulkImport
+);
+
+// ============================================
+// User Licenses
+// ============================================
+
+// GET /api/v1/licenses/user/:userId - Get licenses for a specific user
+router.get(
+    '/user/:userId',
+    validateParams(userIdParamSchema),
+    getUserLicenses
+);
+
+// ============================================
+// CRUD Operations
+// ============================================
+
+// GET /api/v1/licenses - Get all licenses
+router.get(
+    '/',
+    validateQuery(licenseQuerySchema),
+    getLicenses
+);
+
+// POST /api/v1/licenses - Create license
+router.post(
+    '/',
+    authorize('admin', 'manager'),
+    validate(createLicenseSchema),
+    createLicense
+);
+
+// GET /api/v1/licenses/:id - Get license by ID
+router.get(
+    '/:id',
+    validateParams(licenseIdParamSchema),
+    getLicenseById
+);
+
+// PUT /api/v1/licenses/:id - Update license
+router.put(
+    '/:id',
+    authorize('admin', 'manager'),
+    validateParams(licenseIdParamSchema),
+    validate(updateLicenseSchema),
+    updateLicense
+);
+
+// PATCH /api/v1/licenses/:id - Update license (partial)
+router.patch(
+    '/:id',
+    authorize('admin', 'manager'),
+    validateParams(licenseIdParamSchema),
+    validate(updateLicenseSchema),
+    updateLicense
+);
+
+// DELETE /api/v1/licenses/:id - Hard delete license (admin only)
+router.delete(
+    '/:id',
+    authorize('admin'),
+    validateParams(licenseIdParamSchema),
+    deleteLicense
+);
+
+// ============================================
+// Archive/Restore
+// ============================================
+
+// POST /api/v1/licenses/:id/archive - Archive single license
+router.post(
+    '/:id/archive',
+    authorize('admin', 'manager'),
+    validateParams(licenseIdParamSchema),
+    validate(archiveLicenseSchema),
+    archiveLicense
+);
+
+// POST /api/v1/licenses/:id/restore - Restore archived license
+router.post(
+    '/:id/restore',
+    authorize('admin', 'manager'),
+    validateParams(licenseIdParamSchema),
+    restoreLicense
+);
+
+// ============================================
+// Seat Allocation
+// ============================================
+
+// POST /api/v1/licenses/:id/allocate - Allocate seat to user
+router.post(
+    '/:id/allocate',
+    authorize('admin', 'manager'),
+    validateParams(licenseIdParamSchema),
+    validate(allocateSeatSchema),
+    allocateSeat
+);
+
+// POST /api/v1/licenses/:id/deallocate - Deallocate seat from user
+router.post(
+    '/:id/deallocate',
+    authorize('admin', 'manager'),
+    validateParams(licenseIdParamSchema),
+    validate(deallocateSeatSchema),
+    deallocateSeat
+);
+
+// ============================================
+// Legacy Assignment Routes (compatibility)
+// ============================================
+
+// POST /api/v1/licenses/:id/assign - Assign license to user
+router.post(
+    '/:id/assign',
+    authorize('admin', 'manager'),
+    validateParams(licenseIdParamSchema),
+    validate(assignLicenseSchema),
+    assignLicense
+);
+
+// POST /api/v1/licenses/:id/unassign - Unassign license from user
+router.post(
+    '/:id/unassign',
+    authorize('admin', 'manager'),
+    validateParams(licenseIdParamSchema),
+    validate(unassignLicenseSchema),
+    unassignLicense
+);
+
+// ============================================
+// Assignment History
+// ============================================
+
+// GET /api/v1/licenses/:id/assignment-history - Get license assignment history
+router.get(
+    '/:id/assignment-history',
+    validateParams(licenseIdParamSchema),
+    getLicenseAssignmentHistory
+);
 
 export default router;
