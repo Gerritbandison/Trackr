@@ -22,7 +22,8 @@ describe('Authentication API Integration Tests', () => {
 
             expect(response.status).toBe(201);
             expect(response.body.success).toBe(true);
-            expect(response.body.data.token).toBeDefined();
+            expect(response.body.data.accessToken).toBeDefined();
+            expect(response.body.data.refreshToken).toBeDefined();
             expect(response.body.data.user.email).toBe('newuser@example.com');
             expect(response.body.data.user.password).toBeUndefined();
         });
@@ -102,7 +103,8 @@ describe('Authentication API Integration Tests', () => {
 
             expect(response.status).toBe(200);
             expect(response.body.success).toBe(true);
-            expect(response.body.data.token).toBeDefined();
+            expect(response.body.data.accessToken).toBeDefined();
+            expect(response.body.data.refreshToken).toBeDefined();
             expect(response.body.data.user.email).toBe('testuser@example.com');
             expect(response.body.data.user.password).toBeUndefined();
         });
