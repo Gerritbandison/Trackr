@@ -1,6 +1,12 @@
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
 
+// Import all models to ensure they're registered
+import '../modules/users/user.model';
+import '../modules/assets/asset.model';
+import '../modules/licenses/license.model';
+import '../modules/locations/location.model';
+
 // Set test environment variables
 process.env.JWT_SECRET = 'test-secret-key-for-testing-only';
 process.env.JWT_EXPIRE = '7d';
