@@ -11,31 +11,39 @@ interface UserFilter {
 
 export class UserService {
     // Get all users with pagination
-    async getUsers(filter: UserFilter = {}, options: PaginationOptions = {}): Promise<PaginatedResult<any>> {
+    async getUsers(filter: UserFilter = {}, options: PaginationOptions = {}, sort: string = '-createdAt'): Promise<PaginatedResult<any>> {
         try {
-            const { page = 1, limit = 50, sort = '-createdAt' } = options;
-            const skip = (page - 1) * limit;
+            const { page: pageParam = 1, limit: limitParam = 50 } = options;
+            
+            // Convert to numbers with defaults
+            const page = typeof pageParam === 'string' ? parseInt(pageParam, 10) : pageParam;
+            const limit = typeof limitParam === 'string' ? parseInt(limitParam, 10) : limitParam;
+            
+            const pageNum = Math.max(1, isNaN(page) ? 1 : page);
+            const limitNum = Math.max(1, isNaN(limit) ? 50 : Math.min(limit, 1000)); // Max 1000 per page
+            
+            const skip = (pageNum - 1) * limitNum;
 
             const [data, total] = await Promise.all([
                 User.find(filter)
                     .select('-password -twoFactorSecret -__v')
                     .sort(sort)
                     .skip(skip)
-                    .limit(limit)
+                    .limit(limitNum)
                     .lean(),
                 User.countDocuments(filter)
             ]);
 
-            const pages = Math.ceil(total / limit);
+            const pages = Math.ceil(total / limitNum);
 
             return {
                 data,
                 total,
-                page,
-                limit,
+                page: pageNum,
+                limit: limitNum,
                 pages,
-                hasNext: page < pages,
-                hasPrev: page > 1
+                hasNext: pageNum < pages,
+                hasPrev: pageNum > 1
             };
         } catch (error) {
             throw new Error(`Failed to fetch users: ${error instanceof Error ? error.message : 'Unknown error'}`);

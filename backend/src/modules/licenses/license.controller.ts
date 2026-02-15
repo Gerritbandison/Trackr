@@ -2,7 +2,7 @@ import { Response } from 'express';
 import { licenseService } from './license.service';
 import { AuthRequest } from '../../core/middleware/auth.middleware';
 import { ApiResponse } from '../../core/utils/response';
-import { parsePaginationParams } from '../../core/utils/pagination';
+import { getPaginationParams } from '../../core/utils/pagination';
 
 // ============================================
 // CRUD Operations
@@ -27,7 +27,8 @@ export const getLicenses = async (req: AuthRequest, res: Response): Promise<void
         if (minUtilization) filter.minUtilization = parseFloat(minUtilization as string);
         if (maxUtilization) filter.maxUtilization = parseFloat(maxUtilization as string);
 
-        const { page, limit, sort } = parsePaginationParams(req.query);
+        const { page, limit } = getPaginationParams(req.query);
+        const sort = (req.query.sort as string) || '-createdAt';
         const result = await licenseService.getLicenses(filter, { page, limit, sort });
 
         ApiResponse.paginated(res, result.data, result.total, result.page, result.limit);
@@ -214,7 +215,8 @@ export const bulkArchiveLicenses = async (req: AuthRequest, res: Response): Prom
 
 export const allocateSeat = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const { userId, reason, notifyUser } = req.body;
+        const { userId, reason } = req.body;
+        const notifyUser = req.body.notifyUser ?? true;
 
         if (!userId) {
             ApiResponse.badRequest(res, 'User ID is required');
@@ -229,6 +231,9 @@ export const allocateSeat = async (req: AuthRequest, res: Response): Promise<voi
         const license = await licenseService.allocateSeat(req.params.id!, userId, req.user.id, reason);
         
         // TODO: If notifyUser is true, send notification to user
+        if (notifyUser) {
+            console.log(`Would notify user ${userId} about seat allocation`);
+        }
         
         ApiResponse.success(res, license, 'Seat allocated successfully');
     } catch (error) {
@@ -238,7 +243,8 @@ export const allocateSeat = async (req: AuthRequest, res: Response): Promise<voi
 
 export const deallocateSeat = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const { userId, reason, notifyUser } = req.body;
+        const { userId, reason } = req.body;
+        const notifyUser = req.body.notifyUser ?? true;
 
         if (!userId) {
             ApiResponse.badRequest(res, 'User ID is required');
@@ -248,6 +254,9 @@ export const deallocateSeat = async (req: AuthRequest, res: Response): Promise<v
         const license = await licenseService.deallocateSeat(req.params.id!, userId, reason);
         
         // TODO: If notifyUser is true, send notification to user
+        if (notifyUser) {
+            console.log(`Would notify user ${userId} about seat deallocation`);
+        }
         
         ApiResponse.success(res, license, 'Seat deallocated successfully');
     } catch (error) {

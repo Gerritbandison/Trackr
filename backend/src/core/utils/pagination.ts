@@ -39,7 +39,7 @@ export const getPaginationParams = (
  * @param options - Pagination options
  * @returns Query with pagination applied
  */
-export const paginate = <T>(
+export const paginate = (
   query: any,
   options: PaginationOptions = {}
 ): any => {
@@ -55,6 +55,16 @@ export interface PaginationMeta {
   limit: number;
   total: number;
   totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export interface PaginatedResult<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
   hasNext: boolean;
   hasPrev: boolean;
 }
