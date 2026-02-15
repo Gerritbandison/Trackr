@@ -15,6 +15,12 @@ export interface ILocationHistory {
     reason?: string;
 }
 
+export interface ICustomField {
+    key: string;
+    value: string | number | boolean | Date;
+    type?: 'string' | 'number' | 'boolean' | 'date';
+}
+
 export interface IAsset extends Document {
     name: string;
     description?: string;
@@ -36,6 +42,16 @@ export interface IAsset extends Document {
     locationHistory: ILocationHistory[];
     condition?: 'Excellent' | 'Good' | 'Fair' | 'Poor' | 'Damaged';
     conditionNotes?: string;
+    
+    // Custom fields support
+    customFields?: ICustomField[];
+    
+    // Soft delete support
+    isArchived: boolean;
+    archivedAt?: Date;
+    archivedBy?: mongoose.Types.ObjectId;
+    archiveReason?: string;
+    
     warranty?: {
         provider: string;
         startDate: Date;
@@ -88,6 +104,16 @@ const LocationHistorySchema = new Schema({
     reason: { type: String }
 }, { _id: false });
 
+const CustomFieldSchema = new Schema({
+    key: { type: String, required: true },
+    value: { type: Schema.Types.Mixed, required: true },
+    type: { 
+        type: String, 
+        enum: ['string', 'number', 'boolean', 'date'],
+        default: 'string'
+    }
+}, { _id: false });
+
 const AssetSchema: Schema = new Schema({
     name: { type: String, required: true },
     description: { type: String },
@@ -121,6 +147,16 @@ const AssetSchema: Schema = new Schema({
         default: 'Excellent'
     },
     conditionNotes: { type: String },
+    
+    // Custom fields support
+    customFields: [CustomFieldSchema],
+    
+    // Soft delete support
+    isArchived: { type: Boolean, default: false, index: true },
+    archivedAt: { type: Date },
+    archivedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    archiveReason: { type: String },
+    
     warranty: {
         provider: { type: String },
         startDate: { type: Date },
