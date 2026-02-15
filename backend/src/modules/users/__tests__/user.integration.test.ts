@@ -8,7 +8,8 @@ const app = express();
 app.use(express.json());
 app.use('/api/v1/users', userRoutes);
 
-const JWT_SECRET = process.env.JWT_SECRET || 'test-secret';
+// Use the same secret as setup.ts
+const JWT_SECRET = 'test-secret-key-for-testing-only';
 
 const generateToken = (userId: string, role: string) => {
     return jwt.sign({ id: userId, role }, JWT_SECRET, { expiresIn: '7d' });
@@ -60,6 +61,9 @@ describe('User API Integration Tests', () => {
                 .get('/api/v1/users')
                 .set('Authorization', `Bearer ${adminToken}`);
 
+            if (response.status !== 200) {
+                console.error('Admin get users failed:', response.body);
+            }
             expect(response.status).toBe(200);
             expect(response.body.success).toBe(true);
             expect(response.body.data.length).toBe(3);

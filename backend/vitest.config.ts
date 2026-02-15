@@ -4,8 +4,9 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    setupFiles: ['./src/__tests__/setup.ts'],
     coverage: {
-      provider: 'c8',
+      provider: 'v8',
       reporter: ['text', 'json', 'html'],
       exclude: [
         'node_modules/',
@@ -16,6 +17,7 @@ export default defineConfig({
         'src/core/config/swagger.ts'
       ]
     },
-    testTimeout: 10000
+    testTimeout: 30000,
+    hookTimeout: 30000
   }
 });

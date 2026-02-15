@@ -3,7 +3,7 @@ import { userService } from './user.service';
 import { AuthRequest } from '../../core/middleware/auth.middleware';
 import { validationResult } from 'express-validator';
 import { ApiResponse } from '../../core/utils/response';
-import { parsePaginationParams } from '../../core/utils/pagination';
+import { getPaginationParams } from '../../core/utils/pagination';
 
 export const getUsers = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
@@ -14,7 +14,8 @@ export const getUsers = async (req: AuthRequest, res: Response): Promise<void> =
         if (department) filter.department = department as string;
         if (isActive !== undefined) filter.isActive = isActive === 'true';
 
-        const { page, limit, sort } = parsePaginationParams(req.query);
+        const { page, limit } = getPaginationParams(req.query);
+        const sort = req.query.sort as string || '-createdAt';
         const result = await userService.getUsers(filter, { page, limit, sort });
 
         ApiResponse.paginated(
