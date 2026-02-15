@@ -301,17 +301,21 @@ export class AssetService {
         // Process each asset
         for (let i = 0; i < assets.length; i++) {
             const assetData = assets[i];
+            if (!assetData) continue;
+            
+            const serialNumber = assetData.serialNumber ?? '';
+            const assetTag = assetData.assetTag ?? '';
             
             try {
                 // Check if serial or tag already exists
-                if (existingSerials.has(assetData.serialNumber!)) {
+                if (existingSerials.has(serialNumber)) {
                     result.failed++;
-                    result.errors.push({ index: i, error: `Serial number '${assetData.serialNumber}' already exists` });
+                    result.errors.push({ index: i, error: `Serial number '${serialNumber}' already exists` });
                     continue;
                 }
-                if (existingTags.has(assetData.assetTag!)) {
+                if (existingTags.has(assetTag)) {
                     result.failed++;
-                    result.errors.push({ index: i, error: `Asset tag '${assetData.assetTag}' already exists` });
+                    result.errors.push({ index: i, error: `Asset tag '${assetTag}' already exists` });
                     continue;
                 }
 
@@ -321,8 +325,8 @@ export class AssetService {
                 result.created.push(saved.toObject());
                 
                 // Add to existing sets to prevent duplicates within the batch
-                existingSerials.add(assetData.serialNumber!);
-                existingTags.add(assetData.assetTag!);
+                existingSerials.add(serialNumber);
+                existingTags.add(assetTag);
             } catch (error) {
                 result.failed++;
                 result.errors.push({ 
